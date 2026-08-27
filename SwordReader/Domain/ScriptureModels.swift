@@ -558,6 +558,27 @@ struct ReaderDestination: Codable, Hashable, Sendable {
     }
 }
 
+struct SwordLink: Hashable, Sendable {
+    let moduleID: String
+    let reference: String
+
+    init(moduleID: String, reference: String) {
+        self.moduleID = moduleID
+        self.reference = reference
+    }
+
+    init?(url: URL) {
+        guard url.scheme?.lowercased() == "sword",
+              let moduleID = url.host?.removingPercentEncoding,
+              !moduleID.isEmpty
+        else { return nil }
+        let reference = url.path.removingPercentEncoding?
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/")) ?? ""
+        guard !reference.isEmpty else { return nil }
+        self.init(moduleID: moduleID, reference: reference)
+    }
+}
+
 struct ReaderTab: Codable, Identifiable, Hashable, Sendable {
     enum ContentKind: String, Codable, Hashable, Sendable {
         case bible

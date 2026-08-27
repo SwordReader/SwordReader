@@ -110,6 +110,15 @@ struct ReaderView: View {
                 .frame(maxWidth: 720, alignment: .leading)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 20)
+                .environment(\.openURL, swordLinkAction(for: model.selectedReaderTabID))
+        }
+    }
+
+    private func swordLinkAction(for tabID: ReaderTab.ID?) -> OpenURLAction {
+        OpenURLAction { url in
+            guard SwordLink(url: url) != nil else { return .systemAction }
+            Task { await model.openSwordLink(url, in: tabID) }
+            return .handled
         }
     }
 
@@ -343,6 +352,7 @@ struct ReaderView: View {
                         .textSelection(.enabled)
                         .frame(maxWidth: 720, alignment: .leading)
                         .padding()
+                        .environment(\.openURL, swordLinkAction(for: pane.id))
                 }
             }
         }

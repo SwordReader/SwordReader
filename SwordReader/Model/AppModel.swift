@@ -606,6 +606,71 @@ final class AppModel {
         }
     }
 
+    func openSwordLink(_ url: URL, in tabID: ReaderTab.ID? = nil) async {
+        guard let link = SwordLink(url: url),
+              let targetTabID = tabID ?? selectedReaderTabID,
+              let tabIndex = readerTabs.firstIndex(where: { $0.id == targetTabID })
+        else { return }
+
+        if let keyedModule = keyedModules.first(where: {
+            $0.id.caseInsensitiveCompare(link.moduleID) == .orderedSame
+        }) {
+            do {
+                let keys = try await service.keyedEntryKeys(moduleID: keyedModule.id)
+                let normalizedReference = Self.normalizedSwordKey(link.reference)
+                guard let key = keys.first(where: {
+                    Self.normalizedSwordKey($0) == normalizedReference
+                }) else { return }
+                let entry = try await service.keyedEntry(moduleID: keyedModule.id, key: key)
+                let destination = ReaderDestination(moduleID: keyedModule.id, reference: key)
+                readerTabs[tabIndex].destination = destination
+                readerTabs[tabIndex].contentKind = .keyed
+                if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == targetTabID }) {
+                    sideBySidePanes[paneIndex] = SideBySideReaderPane(
+                        id: targetTabID,
+                        destination: destination,
+                        content: .keyed(entry)
+                    )
+                }
+                if selectedReaderTabID == targetTabID { selectedKeyedEntry = entry }
+            } catch {
+                presentedError = PresentedError(error)
+            }
+            return
+        }
+
+        let bibleModuleID = modules.first(where: {
+            $0.id.caseInsensitiveCompare(link.moduleID) == .orderedSame
+        })?.id ?? readerTabs.first(where: {
+            $0.id == targetTabID && $0.contentKind == .bible
+        })?.destination.moduleID ?? selectedModuleID ?? modules.first?.id
+        guard let bibleModuleID else { return }
+        do {
+            let chapter = try await service.chapter(link.reference, moduleID: bibleModuleID)
+            let destination = ReaderDestination(moduleID: bibleModuleID, reference: chapter.reference)
+            readerTabs[tabIndex].destination = destination
+            readerTabs[tabIndex].contentKind = .bible
+            if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == targetTabID }) {
+                sideBySidePanes[paneIndex] = SideBySideReaderPane(
+                    id: targetTabID,
+                    destination: destination,
+                    content: .bible(chapter)
+                )
+            }
+            if selectedReaderTabID == targetTabID {
+                selectedKeyedEntry = nil
+                await open(destination: destination)
+            }
+        } catch {
+            presentedError = PresentedError(error)
+        }
+    }
+
+    private static func normalizedSwordKey(_ key: String) -> String {
+        key.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .lowercased()
+    }
+
     func readerKeys(moduleID: String) async -> [String] {
         do {
             return try await service.keyedEntryKeys(moduleID: moduleID)

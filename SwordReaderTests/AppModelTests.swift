@@ -24,6 +24,18 @@ struct AppModelTests {
         #expect(!rendered.contains("<p>"))
     }
 
+    @Test func swordLinksResolveModulesAndReferences() {
+        #expect(
+            SwordLink(url: URL(string: "sword://ISBE/ADDAR")!)
+                == SwordLink(moduleID: "ISBE", reference: "ADDAR")
+        )
+        #expect(
+            SwordLink(url: URL(string: "sword://Bible/Joshua%2015:3")!)
+                == SwordLink(moduleID: "Bible", reference: "Joshua 15:3")
+        )
+        #expect(SwordLink(url: URL(string: "https://example.com")!) == nil)
+    }
+
     @Test func keyedEntryNavigationFindsAdjacentEntries() {
         let keys = ["Chapter I", "Chapter II", "Chapter III"]
 
