@@ -827,33 +827,41 @@ private struct VerseView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .contextMenu {
-            if selectedText() != nil {
-                Button("Copy", systemImage: "doc.on.doc") {
-                    guard let selectedText = selectedText() else { return }
-                    copyToPasteboard(selectedText)
-                }
-                Button("Highlight", systemImage: "highlighter") {
-                    guard let selectedText = selectedText() else { return }
-                    Task {
-                        await model.saveHighlight(selectedText, reference: verse.reference)
+            Button("Copy", systemImage: "doc.on.doc") {
+                guard let selectedText = selectedText() else { return }
+                copyToPasteboard(selectedText)
+            }
+            Menu("Highlight", systemImage: "highlighter") {
+                ForEach(StudyHighlightColor.allCases) { color in
+                    Button {
+                        guard let selectedText = selectedText() else { return }
+                        Task {
+                            await model.saveHighlight(
+                                selectedText,
+                                color: color,
+                                reference: verse.reference
+                            )
+                        }
+                    } label: {
+                        Label(color.title, systemImage: color.symbolName)
                     }
                 }
-                Button("Add Note…", systemImage: "square.and.pencil") {
-                    guard let selectedText = selectedText() else { return }
-                    selectedTextForNote = selectedText
-                    isEditingNote = true
-                }
-                Divider()
-                Button(
-                    model.isBookmarked(reference: verse.reference)
-                        ? "Remove Bookmark"
-                        : "Bookmark Verse",
-                    systemImage: model.isBookmarked(reference: verse.reference)
-                        ? "bookmark.slash"
-                        : "bookmark"
-                ) {
-                    Task { await model.toggleBookmark(reference: verse.reference) }
-                }
+            }
+            Button("Add Note…", systemImage: "square.and.pencil") {
+                guard let selectedText = selectedText() else { return }
+                selectedTextForNote = selectedText
+                isEditingNote = true
+            }
+            Divider()
+            Button(
+                model.isBookmarked(reference: verse.reference)
+                    ? "Remove Bookmark"
+                    : "Bookmark Verse",
+                systemImage: model.isBookmarked(reference: verse.reference)
+                    ? "bookmark.slash"
+                    : "bookmark"
+            ) {
+                Task { await model.toggleBookmark(reference: verse.reference) }
             }
         }
         .accessibilityAction(named: "Highlight Verse") {
@@ -899,6 +907,12 @@ private struct VerseView: View {
         if !model.showsRedLetterText {
             content.foregroundColor = nil
         }
+        if let highlight = model.studyItems.first(where: {
+            $0.kind == .highlight && $0.reference == verse.reference
+        }), let text = highlight.text,
+           let range = content.range(of: text) {
+            content[range].backgroundColor = (highlight.highlightColor ?? .yellow).color
+        }
         return content
     }
 
@@ -925,6 +939,21 @@ private struct VerseView: View {
         #else
         UIPasteboard.general.string = text
         #endif
+    }
+}
+
+private extension StudyHighlightColor {
+    var symbolName: String {
+        "circle.fill"
+    }
+
+    var color: Color {
+        switch self {
+        case .pink: .pink.opacity(0.45)
+        case .blue: .blue.opacity(0.35)
+        case .yellow: .yellow.opacity(0.55)
+        case .green: .green.opacity(0.4)
+        }
     }
 }
 

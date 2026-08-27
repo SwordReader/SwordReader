@@ -404,11 +404,16 @@ final class AppModel {
         }
     }
 
-    func saveHighlight(_ text: String?, reference: String) async {
+    func saveHighlight(
+        _ text: String?,
+        color: StudyHighlightColor = .yellow,
+        reference: String
+    ) async {
         guard let selectedModuleID, let studyStore else { return }
         do {
             try studyStore.saveHighlight(
                 text,
+                color: color,
                 moduleID: selectedModuleID,
                 reference: reference
             )

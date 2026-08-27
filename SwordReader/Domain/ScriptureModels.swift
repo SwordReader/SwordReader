@@ -466,6 +466,18 @@ struct StudyItem: Identifiable, Hashable, Sendable {
     let moduleID: String
     let reference: String
     let text: String?
+    var highlightColor: StudyHighlightColor? = nil
+}
+
+enum StudyHighlightColor: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case pink
+    case blue
+    case yellow
+    case green
+
+    var id: Self { self }
+
+    var title: String { rawValue.capitalized }
 }
 
 enum AppSection: String, CaseIterable, Identifiable, Sendable {

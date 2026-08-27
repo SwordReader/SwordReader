@@ -867,11 +867,17 @@ struct AppModelTests {
         )
         await model.start()
 
-        await model.saveHighlight("For God so loved", reference: "John 3:16")
+        await model.saveHighlight(
+            "For God so loved",
+            color: .yellow,
+            reference: "John 3:16"
+        )
 
         #expect(model.highlight(reference: "John 3:16") == "For God so loved")
         #expect(model.studyItems.contains {
-            $0.kind == .highlight && $0.reference == "John 3:16"
+            $0.kind == .highlight
+                && $0.reference == "John 3:16"
+                && $0.highlightColor == .yellow
         })
     }
 
@@ -987,13 +993,24 @@ private final class FakeStudyStore: StudyDataServing {
         }
     }
 
-    func saveHighlight(_ text: String?, moduleID: String, reference: String) throws {
+    func saveHighlight(
+        _ text: String?,
+        color: StudyHighlightColor,
+        moduleID: String,
+        reference: String
+    ) throws {
         items.removeAll {
             $0.kind == .highlight && $0.moduleID == moduleID && $0.reference == reference
         }
         if let text, !text.isEmpty {
             items.append(
-                StudyItem(kind: .highlight, moduleID: moduleID, reference: reference, text: text)
+                StudyItem(
+                    kind: .highlight,
+                    moduleID: moduleID,
+                    reference: reference,
+                    text: text,
+                    highlightColor: color
+                )
             )
         }
     }

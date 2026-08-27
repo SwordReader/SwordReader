@@ -6,7 +6,12 @@ protocol StudyDataServing: AnyObject {
     func fetchAll() throws -> [StudyItem]
     func toggleBookmark(moduleID: String, reference: String) throws
     func saveNote(_ text: String?, moduleID: String, reference: String) throws
-    func saveHighlight(_ text: String?, moduleID: String, reference: String) throws
+    func saveHighlight(
+        _ text: String?,
+        color: StudyHighlightColor,
+        moduleID: String,
+        reference: String
+    ) throws
 }
 
 enum StudyDataSchemaV1: VersionedSchema {
@@ -40,21 +45,59 @@ enum StudyDataSchemaV1: VersionedSchema {
     }
 }
 
+enum StudyDataSchemaV2: VersionedSchema {
+    static let versionIdentifier = Schema.Version(2, 0, 0)
+    static var models: [any PersistentModel.Type] { [StudyRecord.self] }
+
+    @Model
+    final class StudyRecord {
+        @Attribute(.unique) var id: String
+        var kind: String
+        var moduleID: String
+        var reference: String
+        var text: String?
+        var highlightColor: String?
+        var createdAt: Date
+
+        init(
+            id: String,
+            kind: String,
+            moduleID: String,
+            reference: String,
+            text: String?,
+            highlightColor: String? = nil,
+            createdAt: Date = .now
+        ) {
+            self.id = id
+            self.kind = kind
+            self.moduleID = moduleID
+            self.reference = reference
+            self.text = text
+            self.highlightColor = highlightColor
+            self.createdAt = createdAt
+        }
+    }
+}
+
 enum StudyDataMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [StudyDataSchemaV1.self] }
-    static var stages: [MigrationStage] { [] }
+    static var schemas: [any VersionedSchema.Type] {
+        [StudyDataSchemaV1.self, StudyDataSchemaV2.self]
+    }
+    static var stages: [MigrationStage] {
+        [.lightweight(fromVersion: StudyDataSchemaV1.self, toVersion: StudyDataSchemaV2.self)]
+    }
 }
 
 @MainActor
 final class StudyStore: StudyDataServing {
-    private typealias Record = StudyDataSchemaV1.StudyRecord
+    private typealias Record = StudyDataSchemaV2.StudyRecord
     private let container: ModelContainer
     private var context: ModelContext { container.mainContext }
 
     init(inMemory: Bool = false) throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
         container = try ModelContainer(
-            for: StudyDataSchemaV1.StudyRecord.self,
+            for: StudyDataSchemaV2.StudyRecord.self,
             migrationPlan: StudyDataMigrationPlan.self,
             configurations: configuration
         )
@@ -91,13 +134,25 @@ final class StudyStore: StudyDataServing {
         try saveText(text, kind: .note, moduleID: moduleID, reference: reference)
     }
 
-    func saveHighlight(_ text: String?, moduleID: String, reference: String) throws {
-        try saveText(text, kind: .highlight, moduleID: moduleID, reference: reference)
+    func saveHighlight(
+        _ text: String?,
+        color: StudyHighlightColor,
+        moduleID: String,
+        reference: String
+    ) throws {
+        try saveText(
+            text,
+            kind: .highlight,
+            highlightColor: color,
+            moduleID: moduleID,
+            reference: reference
+        )
     }
 
     private func saveText(
         _ text: String?,
         kind: StudyItem.Kind,
+        highlightColor: StudyHighlightColor? = nil,
         moduleID: String,
         reference: String
     ) throws {
@@ -106,6 +161,7 @@ final class StudyStore: StudyDataServing {
         if let existing = try record(id: id) {
             if let normalized, !normalized.isEmpty {
                 existing.text = normalized
+                existing.highlightColor = highlightColor?.rawValue
             } else {
                 context.delete(existing)
             }
@@ -116,7 +172,8 @@ final class StudyStore: StudyDataServing {
                     kind: kind.rawValue,
                     moduleID: moduleID,
                     reference: reference,
-                    text: normalized
+                    text: normalized,
+                    highlightColor: highlightColor?.rawValue
                 )
             )
         }
@@ -145,7 +202,8 @@ final class StudyStore: StudyDataServing {
             kind: kind,
             moduleID: record.moduleID,
             reference: record.reference,
-            text: record.text
+            text: record.text,
+            highlightColor: record.highlightColor.flatMap(StudyHighlightColor.init(rawValue:))
         )
     }
 }
