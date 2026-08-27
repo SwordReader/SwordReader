@@ -12,6 +12,8 @@ struct ReaderView: View {
     @State private var isChoosingBook = false
     @State private var isChoosingChapter = false
     @State private var isShowingComparison = false
+    @State private var isShowingModuleBrowser = false
+    @State private var isConfirmingModuleDownload = false
     @State private var sideBySideRatio = 0.5
     @State private var sideBySideDragStartRatio: Double?
 
@@ -74,6 +76,22 @@ struct ReaderView: View {
         #endif
         .sheet(isPresented: $isShowingComparison, onDismiss: { model.endComparison() }) {
             TranslationComparisonView().environment(model)
+        }
+        .confirmationDialog(
+            "Connect to CrossWire?",
+            isPresented: $isConfirmingModuleDownload,
+            titleVisibility: .visible
+        ) {
+            Button("Continue") {
+                isShowingModuleBrowser = true
+                Task { await model.refreshRemoteCatalog() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("SwordReader will contact the selected module source to retrieve its catalog. The source receives the network information needed to serve this request.")
+        }
+        .sheet(isPresented: $isShowingModuleBrowser) {
+            RemoteModuleBrowser().environment(model)
         }
     }
 
@@ -241,6 +259,10 @@ struct ReaderView: View {
                             Text(module.title)
                         }
                     }
+                }
+                Divider()
+                Button("Download More Modules…", systemImage: "arrow.down.circle") {
+                    isConfirmingModuleDownload = true
                 }
             } label: {
                 Label(
