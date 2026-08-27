@@ -36,6 +36,14 @@ struct AppModelTests {
         #expect(SwordLink(url: URL(string: "https://example.com")!) == nil)
     }
 
+    @Test func searchTextRemovesOSISMarkup() {
+        #expect(
+            ScriptureTextSanitizer.plainText(
+                "In <hi type=\"italic\">the</hi> beginning &amp; forever."
+            ) == "In the beginning & forever."
+        )
+    }
+
     @Test func keyedEntryNavigationFindsAdjacentEntries() {
         let keys = ["Chapter I", "Chapter II", "Chapter III"]
 

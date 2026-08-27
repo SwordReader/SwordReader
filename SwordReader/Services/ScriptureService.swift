@@ -214,7 +214,7 @@ actor SwordScriptureService: ScriptureServing {
             BibleSearchResult(
                 reference: $0.reference.value,
                 moduleID: $0.moduleName,
-                text: $0.text,
+                text: ScriptureTextSanitizer.plainText($0.text),
                 score: $0.score
             )
         }

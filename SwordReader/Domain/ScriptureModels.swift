@@ -128,6 +128,21 @@ struct BibleSearchResult: Identifiable, Hashable, Sendable {
     let score: Int
 }
 
+enum ScriptureTextSanitizer {
+    static func plainText(_ text: String) -> String {
+        text.replacingOccurrences(
+            of: "<[^>]+>",
+            with: "",
+            options: .regularExpression
+        )
+        .replacingOccurrences(of: "&amp;", with: "&")
+        .replacingOccurrences(of: "&lt;", with: "<")
+        .replacingOccurrences(of: "&gt;", with: ">")
+        .replacingOccurrences(of: "&quot;", with: "\"")
+        .replacingOccurrences(of: "&#39;", with: "'")
+    }
+}
+
 enum ScriptureSearchMode: String, CaseIterable, Identifiable, Sendable {
     case phrase
     case allWords
