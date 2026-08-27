@@ -12,7 +12,7 @@ in the application's Application Support container.
 Open `SwordReader.xcodeproj` in Xcode 26 or later. Choose `SwordReader` for iOS
 and iPadOS, or `SwordReader-macOS` for macOS.
 
-The current development-preview identity is version `0.3.0` (build 1), with bundle identifiers
+The current development-preview identity is version `0.3.0` (build 2), with bundle identifiers
 under `com.orbeavers14.SwordReader`. Register these identifiers with the Apple
 Developer account before creating distribution profiles or App Store records.
 
