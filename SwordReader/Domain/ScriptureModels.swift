@@ -547,19 +547,47 @@ struct ReaderDestination: Codable, Hashable, Sendable {
 }
 
 struct ReaderTab: Codable, Identifiable, Hashable, Sendable {
+    enum ContentKind: String, Codable, Hashable, Sendable {
+        case bible
+        case keyed
+    }
+
     let id: UUID
     var destination: ReaderDestination
+    var contentKind: ContentKind
 
-    init(id: UUID = UUID(), destination: ReaderDestination) {
+    init(
+        id: UUID = UUID(),
+        destination: ReaderDestination,
+        contentKind: ContentKind = .bible
+    ) {
         self.id = id
         self.destination = destination
+        self.contentKind = contentKind
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, destination, contentKind
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        destination = try container.decode(ReaderDestination.self, forKey: .destination)
+        contentKind = try container.decodeIfPresent(ContentKind.self, forKey: .contentKind)
+            ?? .bible
     }
 }
 
 struct SideBySideReaderPane: Identifiable, Hashable, Sendable {
+    enum Content: Hashable, Sendable {
+        case bible(BibleChapter)
+        case keyed(KeyedModuleEntry)
+    }
+
     let id: ReaderTab.ID
     let destination: ReaderDestination
-    let chapter: BibleChapter
+    let content: Content
 }
 
 struct SideBySideReaderPair: Hashable, Sendable {

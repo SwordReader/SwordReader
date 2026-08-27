@@ -29,6 +29,8 @@ struct ReaderView: View {
                 ProgressView("Loading chapter…")
             } else if let pair = model.sideBySidePair {
                 sideBySideContent(pair)
+            } else if let entry = model.selectedKeyedEntry {
+                keyedContent(entry)
             } else if let chapter = model.chapter {
                 chapterContent(chapter)
             } else {
@@ -44,7 +46,7 @@ struct ReaderView: View {
                     .environment(model)
             }
         }
-        .navigationTitle(model.reference.isEmpty ? "Read" : model.reference)
+        .navigationTitle(readerNavigationTitle)
         .toolbarTitleDisplayMode(.inline)
         .toolbar { readerToolbar }
         #if os(macOS)
@@ -100,8 +102,20 @@ struct ReaderView: View {
         )
     }
 
+    private func keyedContent(_ entry: KeyedModuleEntry) -> some View {
+        ScrollView {
+            Text(KeyedEntryFormatter.attributedString(for: entry))
+                .font(.system(size: model.readerFontSize, design: model.readerFont.design))
+                .textSelection(.enabled)
+                .frame(maxWidth: 720, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
+        }
+    }
+
     @ToolbarContentBuilder
     private var readerToolbar: some ToolbarContent {
+        if selectedTabIsBible {
         #if os(macOS)
         ToolbarItem(placement: .principal) {
             HStack(spacing: 12) {
@@ -123,6 +137,7 @@ struct ReaderView: View {
             nextChapterButton
         }
         #endif
+        }
 
         ToolbarItem(placement: .secondaryAction) {
             ReaderAppearanceMenu()
@@ -195,7 +210,9 @@ struct ReaderView: View {
             Menu {
                 ForEach(model.modules) { module in
                     Button {
-                        model.selectModule(module.id)
+                        if let tabID = model.selectedReaderTabID {
+                            Task { await model.setReaderTabModule(tabID, moduleID: module.id) }
+                        }
                     } label: {
                         if module.id == model.selectedModuleID {
                             Label(module.title, systemImage: "checkmark")
@@ -204,15 +221,42 @@ struct ReaderView: View {
                         }
                     }
                 }
+                if !model.keyedModules.isEmpty {
+                    Divider()
+                    ForEach(model.keyedModules) { module in
+                        Button {
+                            if let tabID = model.selectedReaderTabID {
+                                Task { await model.setReaderTabModule(tabID, moduleID: module.id) }
+                            }
+                        } label: {
+                            Text(module.title)
+                        }
+                    }
+                }
             } label: {
                 Label(
-                    model.selectedModuleID ?? "Translation",
+                    model.installedModuleTitle(
+                        model.readerTabs.first { $0.id == model.selectedReaderTabID }?.destination.moduleID
+                    ),
                     systemImage: "character.book.closed"
                 )
             }
-            .accessibilityLabel("Translation")
-            .help("Translation: \(model.selectedModuleID ?? "None Selected")")
+            .accessibilityLabel("Module")
+            .help("Change Module")
         }
+    }
+
+    private var selectedTabIsBible: Bool {
+        model.readerTabs.first { $0.id == model.selectedReaderTabID }?.contentKind != .keyed
+    }
+
+    private var readerNavigationTitle: String {
+        guard let tab = model.readerTabs.first(where: { $0.id == model.selectedReaderTabID }) else {
+            return model.reference.isEmpty ? "Read" : model.reference
+        }
+        return tab.contentKind == .keyed
+            ? SideBySidePaneHeader.keyTitle(tab.destination.reference)
+            : tab.destination.reference
     }
 
     private var chapterNavigation: some View {
@@ -274,23 +318,32 @@ struct ReaderView: View {
                 .environment(model)
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: model.readerSpacing.verseSpacing) {
-                    ForEach(pane.chapter.verses) { verse in
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            if model.showsVerseNumbers {
-                                Text(verse.number)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                switch pane.content {
+                case .bible(let chapter):
+                    LazyVStack(alignment: .leading, spacing: model.readerSpacing.verseSpacing) {
+                        ForEach(chapter.verses) { verse in
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                if model.showsVerseNumbers {
+                                    Text(verse.number)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Text(displayedContent(for: verse))
+                                    .font(.system(size: model.readerFontSize, design: model.readerFont.design))
+                                    .lineSpacing(model.readerSpacing.lineSpacing)
+                                    .textSelection(.enabled)
                             }
-                            Text(displayedContent(for: verse))
-                                .font(.system(size: model.readerFontSize, design: model.readerFont.design))
-                                .lineSpacing(model.readerSpacing.lineSpacing)
-                                .textSelection(.enabled)
                         }
                     }
+                    .frame(maxWidth: 720, alignment: .leading)
+                    .padding()
+                case .keyed(let entry):
+                    Text(KeyedEntryFormatter.attributedString(for: entry))
+                        .font(.system(size: model.readerFontSize, design: model.readerFont.design))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: 720, alignment: .leading)
+                        .padding()
                 }
-                .frame(maxWidth: 720, alignment: .leading)
-                .padding()
             }
         }
     }
@@ -355,11 +408,10 @@ private struct SideBySidePaneHeader: View {
     @Environment(AppModel.self) private var model
     let pane: SideBySideReaderPane
     @State private var books: [BibleBook] = []
+    @State private var keys: [String] = []
 
     private var moduleTitle: String {
-        model.modules.first { $0.id == pane.destination.moduleID }?.title
-            ?? pane.destination.moduleID
-            ?? "Bible"
+        model.installedModuleTitle(pane.destination.moduleID)
     }
 
     var body: some View {
@@ -378,6 +430,16 @@ private struct SideBySidePaneHeader: View {
                         }
                     }
                 }
+                if !model.keyedModules.isEmpty {
+                    Divider()
+                    ForEach(model.keyedModules) { module in
+                        Button(module.title) {
+                            Task {
+                                await model.setReaderTabModule(pane.id, moduleID: module.id)
+                            }
+                        }
+                    }
+                }
             } label: {
                 HStack(spacing: 4) {
                     Text(moduleTitle)
@@ -389,25 +451,40 @@ private struct SideBySidePaneHeader: View {
             .menuIndicator(.hidden)
             .help("Change Module")
 
+            Button("Previous Page", systemImage: "chevron.left") {
+                move(by: -1)
+            }
+            .labelStyle(.iconOnly)
+            .disabled(!canMove(by: -1))
+            .help("Previous \(books.isEmpty ? "Entry" : "Chapter")")
+
             Menu {
-                ForEach(books) { book in
-                    Menu(book.name) {
-                        ForEach(1...book.chapterCount, id: \.self) { chapter in
-                            Button("Chapter \(chapter)") {
-                                Task {
-                                    await model.setReaderTabReference(
-                                        pane.id,
-                                        book: book,
-                                        chapter: chapter
-                                    )
+                if !books.isEmpty {
+                    ForEach(books) { book in
+                        Menu(book.name) {
+                            ForEach(1...book.chapterCount, id: \.self) { chapter in
+                                Button("Chapter \(chapter)") {
+                                    Task {
+                                        await model.setReaderTabReference(
+                                            pane.id,
+                                            book: book,
+                                            chapter: chapter
+                                        )
+                                    }
                                 }
                             }
+                        }
+                    }
+                } else {
+                    ForEach(keys, id: \.self) { key in
+                        Button(Self.keyTitle(key)) {
+                            Task { await model.setReaderTabKey(pane.id, key: key) }
                         }
                     }
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Text(pane.destination.reference)
+                    Text(books.isEmpty ? Self.keyTitle(pane.destination.reference) : pane.destination.reference)
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.semibold))
                 }
@@ -415,6 +492,13 @@ private struct SideBySidePaneHeader: View {
             }
             .menuIndicator(.hidden)
             .help("Change Book or Chapter")
+
+            Button("Next Page", systemImage: "chevron.right") {
+                move(by: 1)
+            }
+            .labelStyle(.iconOnly)
+            .disabled(!canMove(by: 1))
+            .help("Next \(books.isEmpty ? "Entry" : "Chapter")")
 
             Spacer(minLength: 0)
         }
@@ -425,10 +509,64 @@ private struct SideBySidePaneHeader: View {
         .task(id: pane.destination.moduleID) {
             guard let moduleID = pane.destination.moduleID else {
                 books = []
+                keys = []
                 return
             }
-            books = await model.readerBooks(moduleID: moduleID)
+            if model.modules.contains(where: { $0.id == moduleID }) {
+                books = await model.readerBooks(moduleID: moduleID)
+                keys = []
+            } else {
+                books = []
+                keys = await model.readerKeys(moduleID: moduleID)
+            }
         }
+    }
+
+    fileprivate static func keyTitle(_ key: String) -> String {
+        key.split(separator: "/").last.map(String.init) ?? key
+    }
+
+    private func canMove(by offset: Int) -> Bool {
+        if books.isEmpty {
+            guard let index = keys.firstIndex(of: pane.destination.reference) else { return false }
+            return keys.indices.contains(index + offset)
+        }
+        return adjacentBibleLocation(by: offset) != nil
+    }
+
+    private func move(by offset: Int) {
+        if books.isEmpty {
+            guard let index = keys.firstIndex(of: pane.destination.reference),
+                  keys.indices.contains(index + offset)
+            else { return }
+            Task { await model.setReaderTabKey(pane.id, key: keys[index + offset]) }
+        } else if let location = adjacentBibleLocation(by: offset) {
+            Task {
+                await model.setReaderTabReference(
+                    pane.id,
+                    book: location.book,
+                    chapter: location.chapter
+                )
+            }
+        }
+    }
+
+    private func adjacentBibleLocation(by offset: Int) -> (book: BibleBook, chapter: Int)? {
+        guard let currentBook = books
+            .sorted(by: { $0.name.count > $1.name.count })
+            .first(where: { pane.destination.reference.hasPrefix($0.name + " ") }),
+              let currentBookIndex = books.firstIndex(of: currentBook),
+              let chapter = Int(pane.destination.reference.dropFirst(currentBook.name.count + 1))
+        else { return nil }
+
+        let adjacentChapter = chapter + offset
+        if (1...currentBook.chapterCount).contains(adjacentChapter) {
+            return (currentBook, adjacentChapter)
+        }
+        let adjacentBookIndex = currentBookIndex + offset
+        guard books.indices.contains(adjacentBookIndex) else { return nil }
+        let adjacentBook = books[adjacentBookIndex]
+        return (adjacentBook, offset > 0 ? 1 : adjacentBook.chapterCount)
     }
 }
 
@@ -481,7 +619,7 @@ private struct ReaderTabBar: View {
                         return true
                     }
                     .contextMenu {
-                        Menu("Translation", systemImage: "character.book.closed") {
+                        Menu("Module", systemImage: "books.vertical") {
                             ForEach(model.modules) { module in
                                 Button {
                                     Task {
@@ -495,6 +633,25 @@ private struct ReaderTabBar: View {
                                         Label(module.title, systemImage: "checkmark")
                                     } else {
                                         Text(module.title)
+                                    }
+                                }
+                            }
+                            if !model.keyedModules.isEmpty {
+                                Divider()
+                                ForEach(model.keyedModules) { module in
+                                    Button {
+                                        Task {
+                                            await model.setReaderTabModule(
+                                                tab.id,
+                                                moduleID: module.id
+                                            )
+                                        }
+                                    } label: {
+                                        if tab.destination.moduleID == module.id {
+                                            Label(module.title, systemImage: "checkmark")
+                                        } else {
+                                            Text(module.title)
+                                        }
                                     }
                                 }
                             }

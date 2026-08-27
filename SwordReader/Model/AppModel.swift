@@ -29,6 +29,7 @@ final class AppModel {
     private(set) var selectedBookID: String?
     private(set) var selectedChapter = 1
     private(set) var chapter: BibleChapter?
+    private(set) var selectedKeyedEntry: KeyedModuleEntry?
     private(set) var parallelVerses: [ParallelVerse] = []
     private(set) var comparisonModuleID: String?
     private(set) var isLoadingComparison = false
@@ -454,15 +455,26 @@ final class AppModel {
     }
 
     func readerTabTitle(_ tab: ReaderTab) -> String {
-        let moduleTitle = modules.first {
-            $0.id == tab.destination.moduleID
-        }?.title ?? tab.destination.moduleID ?? "Bible"
-        return "\(moduleTitle) · \(tab.destination.reference)"
+        let moduleTitle = installedModuleTitle(tab.destination.moduleID)
+        let reference = tab.contentKind == .keyed
+            ? Self.keyDisplayTitle(tab.destination.reference)
+            : tab.destination.reference
+        return "\(moduleTitle) · \(reference)"
     }
 
     func createReaderTab() {
-        guard let currentDestination else { return }
-        let tab = ReaderTab(destination: currentDestination)
+        let tab: ReaderTab
+        if let selectedReaderTabID,
+           let selected = readerTabs.first(where: { $0.id == selectedReaderTabID }) {
+            tab = ReaderTab(
+                destination: selected.destination,
+                contentKind: selected.contentKind
+            )
+        } else if let currentDestination {
+            tab = ReaderTab(destination: currentDestination)
+        } else {
+            return
+        }
         readerTabs.append(tab)
         selectedReaderTabID = tab.id
     }
@@ -472,7 +484,7 @@ final class AppModel {
               let tab = readerTabs.first(where: { $0.id == tabID })
         else { return }
         selectedReaderTabID = tabID
-        await open(destination: tab.destination)
+        await loadSelectedReaderTab(tab)
     }
 
     func moveReaderTab(_ tabID: ReaderTab.ID, to targetID: ReaderTab.ID) {
@@ -486,10 +498,15 @@ final class AppModel {
     }
 
     func setReaderTabModule(_ tabID: ReaderTab.ID, moduleID: String) async {
-        guard modules.contains(where: { $0.id == moduleID }),
-              let index = readerTabs.firstIndex(where: { $0.id == tabID }),
+        guard let index = readerTabs.firstIndex(where: { $0.id == tabID }),
               readerTabs[index].destination.moduleID != moduleID
         else { return }
+
+        if keyedModules.contains(where: { $0.id == moduleID }) {
+            await setReaderTabKeyedModule(tabID, moduleID: moduleID)
+            return
+        }
+        guard modules.contains(where: { $0.id == moduleID }) else { return }
 
         let currentReference = readerTabs[index].destination.reference
         let destination: ReaderDestination
@@ -515,6 +532,7 @@ final class AppModel {
         }
 
         readerTabs[index].destination = destination
+        readerTabs[index].contentKind = .bible
         if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == tabID }) {
             do {
                 let chapter = try await service.chapter(
@@ -524,7 +542,7 @@ final class AppModel {
                 sideBySidePanes[paneIndex] = SideBySideReaderPane(
                     id: tabID,
                     destination: destination,
-                    chapter: chapter
+                    content: .bible(chapter)
                 )
             } catch {
                 presentedError = PresentedError(error)
@@ -532,7 +550,63 @@ final class AppModel {
             }
         }
         if selectedReaderTabID == tabID {
+            selectedKeyedEntry = nil
             await open(destination: destination)
+        }
+    }
+
+    private func setReaderTabKeyedModule(_ tabID: ReaderTab.ID, moduleID: String) async {
+        guard let tabIndex = readerTabs.firstIndex(where: { $0.id == tabID }) else { return }
+        do {
+            let keys = try await service.keyedEntryKeys(moduleID: moduleID)
+            guard let key = keys.first else { return }
+            let entry = try await service.keyedEntry(moduleID: moduleID, key: key)
+            let destination = ReaderDestination(moduleID: moduleID, reference: key)
+            readerTabs[tabIndex].destination = destination
+            readerTabs[tabIndex].contentKind = .keyed
+            if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == tabID }) {
+                sideBySidePanes[paneIndex] = SideBySideReaderPane(
+                    id: tabID,
+                    destination: destination,
+                    content: .keyed(entry)
+                )
+            }
+            if selectedReaderTabID == tabID {
+                selectedKeyedEntry = entry
+            }
+        } catch {
+            presentedError = PresentedError(error)
+        }
+    }
+
+    func setReaderTabKey(_ tabID: ReaderTab.ID, key: String) async {
+        guard let tabIndex = readerTabs.firstIndex(where: { $0.id == tabID }),
+              readerTabs[tabIndex].contentKind == .keyed,
+              let moduleID = readerTabs[tabIndex].destination.moduleID
+        else { return }
+        do {
+            let entry = try await service.keyedEntry(moduleID: moduleID, key: key)
+            let destination = ReaderDestination(moduleID: moduleID, reference: key)
+            readerTabs[tabIndex].destination = destination
+            if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == tabID }) {
+                sideBySidePanes[paneIndex] = SideBySideReaderPane(
+                    id: tabID,
+                    destination: destination,
+                    content: .keyed(entry)
+                )
+            }
+            if selectedReaderTabID == tabID { selectedKeyedEntry = entry }
+        } catch {
+            presentedError = PresentedError(error)
+        }
+    }
+
+    func readerKeys(moduleID: String) async -> [String] {
+        do {
+            return try await service.keyedEntryKeys(moduleID: moduleID)
+        } catch {
+            presentedError = PresentedError(error)
+            return []
         }
     }
 
@@ -570,7 +644,7 @@ final class AppModel {
                 sideBySidePanes[paneIndex] = SideBySideReaderPane(
                     id: tabID,
                     destination: destination,
-                    chapter: loadedChapter
+                    content: .bible(loadedChapter)
                 )
             }
             if selectedReaderTabID == tabID {
@@ -615,15 +689,24 @@ final class AppModel {
             var panes: [SideBySideReaderPane] = []
             for tab in tabs {
                 guard let moduleID = tab.destination.moduleID else { continue }
-                let chapter = try await service.chapter(
-                    tab.destination.reference,
-                    moduleID: moduleID
-                )
+                let content: SideBySideReaderPane.Content
+                switch tab.contentKind {
+                case .bible:
+                    content = .bible(try await service.chapter(
+                        tab.destination.reference,
+                        moduleID: moduleID
+                    ))
+                case .keyed:
+                    content = .keyed(try await service.keyedEntry(
+                        moduleID: moduleID,
+                        key: tab.destination.reference
+                    ))
+                }
                 panes.append(
                     SideBySideReaderPane(
                         id: tab.id,
                         destination: tab.destination,
-                        chapter: chapter
+                        content: content
                     )
                 )
             }
@@ -652,13 +735,16 @@ final class AppModel {
 
         let replacement = readerTabs[min(index, readerTabs.count - 1)]
         selectedReaderTabID = replacement.id
-        await open(destination: replacement.destination)
+        await loadSelectedReaderTab(replacement)
     }
 
     func restoreReaderTabs(_ session: ReaderTabSession) async {
         let availableTabs = session.tabs.filter { tab in
             guard let moduleID = tab.destination.moduleID else { return true }
-            return modules.contains { $0.id == moduleID }
+            switch tab.contentKind {
+            case .bible: return modules.contains { $0.id == moduleID }
+            case .keyed: return keyedModules.contains { $0.id == moduleID }
+            }
         }
         guard !availableTabs.isEmpty else { return }
 
@@ -667,7 +753,36 @@ final class AppModel {
             $0.id == session.selectedTabID
         } ?? availableTabs[0]
         selectedReaderTabID = selectedTab.id
-        await open(destination: selectedTab.destination)
+        await loadSelectedReaderTab(selectedTab)
+    }
+
+    private func loadSelectedReaderTab(_ tab: ReaderTab) async {
+        switch tab.contentKind {
+        case .bible:
+            selectedKeyedEntry = nil
+            await open(destination: tab.destination)
+        case .keyed:
+            guard let moduleID = tab.destination.moduleID else { return }
+            do {
+                selectedKeyedEntry = try await service.keyedEntry(
+                    moduleID: moduleID,
+                    key: tab.destination.reference
+                )
+            } catch {
+                presentedError = PresentedError(error)
+            }
+        }
+    }
+
+    func installedModuleTitle(_ moduleID: String?) -> String {
+        guard let moduleID else { return "Module" }
+        return modules.first { $0.id == moduleID }?.title
+            ?? keyedModules.first { $0.id == moduleID }?.title
+            ?? moduleID
+    }
+
+    private static func keyDisplayTitle(_ key: String) -> String {
+        key.split(separator: "/").last.map(String.init) ?? key
     }
 
     var canMoveToPreviousChapter: Bool {
@@ -1106,9 +1221,10 @@ final class AppModel {
         guard let currentDestination else { return }
 
         if let selectedReaderTabID,
-           let index = readerTabs.firstIndex(where: { $0.id == selectedReaderTabID }) {
+           let index = readerTabs.firstIndex(where: { $0.id == selectedReaderTabID }),
+           readerTabs[index].contentKind == .bible {
             readerTabs[index].destination = currentDestination
-        } else {
+        } else if selectedReaderTabID == nil {
             let tab = ReaderTab(destination: currentDestination)
             readerTabs = [tab]
             selectedReaderTabID = tab.id

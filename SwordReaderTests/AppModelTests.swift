@@ -360,7 +360,42 @@ struct AppModelTests {
 
         let pane = try #require(model.sideBySidePanes.first { $0.id == selectedTab })
         #expect(pane.destination.moduleID == "KJV")
-        #expect(pane.chapter.moduleID == "KJV")
+        guard case .bible(let chapter) = pane.content else {
+            Issue.record("Expected Bible pane")
+            return
+        }
+        #expect(chapter.moduleID == "KJV")
+    }
+
+    @Test func bibleAndDictionaryCanShareSplitView() async throws {
+        let dictionary = KeyedModule(
+            id: "Dict",
+            title: "Bible Dictionary",
+            language: "en",
+            version: nil,
+            copyright: nil,
+            category: .dictionary
+        )
+        let service = FakeScriptureService(
+            keyedModules: [dictionary],
+            keyedEntries: ["Dict": [
+                KeyedModuleEntry(key: "Grace", text: "Unmerited favor", html: "")
+            ]]
+        )
+        let model = AppModel(service: service)
+        await model.start()
+        model.createReaderTab()
+        let dictionaryTab = try #require(model.selectedReaderTabID)
+        await model.setReaderTabModule(dictionaryTab, moduleID: "Dict")
+
+        await model.showSelectedTabsSideBySide()
+
+        let pair = try #require(model.sideBySidePair)
+        #expect(pair.leading.content != pair.trailing.content)
+        #expect(model.readerTabs.first { $0.id == dictionaryTab }?.contentKind == .keyed)
+        #expect(model.readerTabTitle(
+            try #require(model.readerTabs.first { $0.id == dictionaryTab })
+        ) == "Bible Dictionary · Grace")
     }
 
     @Test func closingMergedTabClearsStableSideBySidePair() async throws {
