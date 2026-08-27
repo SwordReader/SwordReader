@@ -149,6 +149,7 @@ struct ReaderView: View {
                         }
                     }
                 }
+                .help("Compare Translations")
             }
         }
 
@@ -172,6 +173,7 @@ struct ReaderView: View {
                         model.clearReadingHistory()
                     }
                 }
+                .help("Reading History")
             }
         }
 
@@ -180,6 +182,7 @@ struct ReaderView: View {
                 Button("Open in New Window", systemImage: "plus.rectangle.on.rectangle") {
                     openWindow(value: destination)
                 }
+                .help("Open in New Window")
             }
         }
 
@@ -203,6 +206,7 @@ struct ReaderView: View {
                 )
             }
             .accessibilityLabel("Translation")
+            .help("Translation: \(model.selectedModuleID ?? "None Selected")")
         }
     }
 
@@ -751,6 +755,7 @@ private struct ReaderAppearanceMenu: View {
             Toggle("Verse Numbers", isOn: verseNumberBinding)
         }
         .accessibilityHint("Changes font, text size, spacing, appearance, and verse numbers")
+        .help("Reading Appearance")
     }
 
     private var fontBinding: Binding<ReaderFont> {
