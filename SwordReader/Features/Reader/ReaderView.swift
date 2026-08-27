@@ -894,9 +894,11 @@ private struct VerseView: View {
     }
 
     private var displayedContent: AttributedString {
-        guard !model.showsRedLetterText else { return verse.content }
         var content = verse.content
-        content.foregroundColor = nil
+        content.font = nil
+        if !model.showsRedLetterText {
+            content.foregroundColor = nil
+        }
         return content
     }
 

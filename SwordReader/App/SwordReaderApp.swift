@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 @main
 struct SwordReaderApp: App {
@@ -96,6 +99,11 @@ private struct SwordReaderSceneView: View {
             .onChange(of: model.readerTabSession) { _, session in
                 storedTabSession = session?.encoded ?? ""
             }
+            .onChange(of: model.appAppearance, initial: true) { _, appearance in
+                #if os(macOS)
+                NSApp.appearance = appearance.nativeAppearance
+                #endif
+            }
             .onReceive(NotificationCenter.default.publisher(
                 for: UserDefaults.didChangeNotification
             )) { _ in
@@ -122,4 +130,14 @@ private extension AppAppearance {
         case .dark: .dark
         }
     }
+
+    #if os(macOS)
+    var nativeAppearance: NSAppearance? {
+        switch self {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+    }
+    #endif
 }

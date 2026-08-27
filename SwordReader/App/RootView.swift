@@ -162,36 +162,9 @@ struct PreferencesView: View {
             Section("Reading") {
                 Toggle("Red-letter text", isOn: redLetterBinding)
                     .help("Show words of Christ in red when the installed module provides that formatting")
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Font Size")
-                        Spacer()
-                        Text("\(Int(model.readerFontSize.rounded())) pt")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    Slider(value: fontSizeBinding, in: 12...32, step: 0.5) {
-                        Text("Font Size")
-                    } minimumValueLabel: {
-                        Image(systemName: "textformat.size.smaller")
-                    } maximumValueLabel: {
-                        Image(systemName: "textformat.size.larger")
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Reader Preview")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        (Text("16 ").foregroundStyle(.secondary)
-                            + Text("I am the way, and the truth, and the life.")
-                                .foregroundStyle(model.showsRedLetterText ? .red : .primary))
-                            .font(.system(size: model.readerFontSize, design: model.readerFont.design))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding()
-                            .background(.background, in: .rect(cornerRadius: 8))
-                    }
-                }
+                Text("Font, size, spacing, and appearance are available from the Reading Appearance control in the reader toolbar.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Library") {
@@ -212,12 +185,6 @@ struct PreferencesView: View {
         )
     }
 
-    private var fontSizeBinding: Binding<Double> {
-        Binding(
-            get: { model.readerFontSize },
-            set: { model.setReaderFontSize($0) }
-        )
-    }
 }
 
 private struct InstalledModulesPreferencesView: View {

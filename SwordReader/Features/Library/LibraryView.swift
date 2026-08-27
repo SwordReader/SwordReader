@@ -614,6 +614,8 @@ enum KeyedEntryFormatter {
               ) else {
             return AttributedString(entry.text)
         }
-        return AttributedString(rendered)
+        var result = AttributedString(rendered)
+        result.font = nil
+        return result
     }
 }
