@@ -93,6 +93,9 @@ private struct TabRootView: View {
             NavigationStack { ReaderView() }
                 .tabItem { Label(AppSection.read.title, systemImage: AppSection.read.systemImage) }
                 .tag(AppSection.read)
+            NavigationStack { StudyItemsView() }
+                .tabItem { Label(AppSection.study.title, systemImage: AppSection.study.systemImage) }
+                .tag(AppSection.study)
             NavigationStack { ReadingPlansView() }
                 .tabItem { Label(AppSection.plans.title, systemImage: AppSection.plans.systemImage) }
                 .tag(AppSection.plans)
@@ -140,6 +143,7 @@ private struct SplitRootView: View {
             NavigationStack {
                 switch model.section {
                 case .read: ReaderView()
+                case .study: StudyItemsView()
                 case .plans: ReadingPlansView()
                 case .search: SearchView()
                 case .library: LibraryView()

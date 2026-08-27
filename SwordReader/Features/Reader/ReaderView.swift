@@ -1,4 +1,9 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 struct ReaderView: View {
     @Environment(AppModel.self) private var model
@@ -554,6 +559,7 @@ private struct VerseView: View {
     let verse: BibleVerse
     @State private var isShowingAnnotations = false
     @State private var isEditingNote = false
+    @State private var selectedTextForNote: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -569,40 +575,64 @@ private struct VerseView: View {
                 .lineSpacing(model.readerSpacing.lineSpacing)
                 .textSelection(.enabled)
 
-            HStack(spacing: 18) {
-                if verse.annotationCount > 0 {
-                    Button {
-                        isShowingAnnotations = true
-                    } label: {
-                        Label(
-                            "\(verse.annotationCount) \(verse.annotationCount == 1 ? "note" : "notes")",
-                            systemImage: "text.bubble"
-                        )
+            if verse.annotationCount > 0 {
+                Button {
+                    isShowingAnnotations = true
+                } label: {
+                    Label(
+                        "\(verse.annotationCount) \(verse.annotationCount == 1 ? "note" : "notes")",
+                        systemImage: "text.bubble"
+                    )
+                }
+                .font(.caption)
+                .buttonStyle(.plain)
+                .foregroundStyle(.tint)
+                .accessibilityHint("Shows notes and Scripture references for \(verse.reference)")
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .contextMenu {
+            if selectedText() != nil {
+                Button("Copy", systemImage: "doc.on.doc") {
+                    guard let selectedText = selectedText() else { return }
+                    copyToPasteboard(selectedText)
+                }
+                Button("Highlight", systemImage: "highlighter") {
+                    guard let selectedText = selectedText() else { return }
+                    Task {
+                        await model.saveHighlight(selectedText, reference: verse.reference)
                     }
-                    .accessibilityHint("Shows notes and Scripture references for \(verse.reference)")
                 }
-
-                Button {
-                    Task { await model.toggleBookmark(reference: verse.reference) }
-                } label: {
-                    Label(
-                        model.isBookmarked(reference: verse.reference) ? "Bookmarked" : "Bookmark",
-                        systemImage: model.isBookmarked(reference: verse.reference) ? "bookmark.fill" : "bookmark"
-                    )
-                }
-
-                Button {
+                Button("Add Note…", systemImage: "square.and.pencil") {
+                    guard let selectedText = selectedText() else { return }
+                    selectedTextForNote = selectedText
                     isEditingNote = true
-                } label: {
-                    Label(
-                        model.note(reference: verse.reference) == nil ? "Add Note" : "Edit Note",
-                        systemImage: "square.and.pencil"
-                    )
+                }
+                Divider()
+                Button(
+                    model.isBookmarked(reference: verse.reference)
+                        ? "Remove Bookmark"
+                        : "Bookmark Verse",
+                    systemImage: model.isBookmarked(reference: verse.reference)
+                        ? "bookmark.slash"
+                        : "bookmark"
+                ) {
+                    Task { await model.toggleBookmark(reference: verse.reference) }
                 }
             }
-            .font(.caption)
-            .buttonStyle(.plain)
-            .foregroundStyle(.tint)
+        }
+        .accessibilityAction(named: "Highlight Verse") {
+            Task {
+                await model.saveHighlight(
+                    String(verse.content.characters),
+                    reference: verse.reference
+                )
+            }
+        }
+        .accessibilityAction(named: "Add or Edit Note") {
+            isEditingNote = true
         }
         .sheet(isPresented: $isShowingAnnotations) {
             VerseAnnotationsView(verse: verse)
@@ -611,7 +641,9 @@ private struct VerseView: View {
         .sheet(isPresented: $isEditingNote) {
             StudyNoteEditor(
                 reference: verse.reference,
-                initialText: model.note(reference: verse.reference) ?? ""
+                initialText: model.note(reference: verse.reference)
+                    ?? selectedTextForNote.map { "“\($0)”\n\n" }
+                    ?? ""
             )
             .environment(model)
         }
@@ -634,7 +666,56 @@ private struct VerseView: View {
         content.foregroundColor = nil
         return content
     }
+
+    private func selectedText() -> String? {
+        #if os(macOS)
+        guard let textView = NSApp.keyWindow?.firstResponder as? NSTextView,
+              textView.selectedRange().length > 0
+        else { return nil }
+        return (textView.string as NSString).substring(with: textView.selectedRange())
+        #else
+        UIResponder.captureCurrentFirstResponder()
+        guard let textView = FirstResponderProbe.current as? UITextView,
+              let range = textView.selectedTextRange,
+              !range.isEmpty
+        else { return nil }
+        return textView.text(in: range)
+        #endif
+    }
+
+    private func copyToPasteboard(_ text: String) {
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #else
+        UIPasteboard.general.string = text
+        #endif
+    }
 }
+
+#if !os(macOS)
+@MainActor
+private enum FirstResponderProbe {
+    static weak var current: UIResponder?
+}
+
+@MainActor
+private extension UIResponder {
+    @objc func captureAsCurrentFirstResponder(_ sender: Any?) {
+        FirstResponderProbe.current = self
+    }
+
+    static func captureCurrentFirstResponder() {
+        FirstResponderProbe.current = nil
+        UIApplication.shared.sendAction(
+            #selector(captureAsCurrentFirstResponder(_:)),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+}
+#endif
 
 private struct StudyNoteEditor: View {
     @Environment(AppModel.self) private var model

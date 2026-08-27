@@ -39,10 +39,11 @@ private extension AppSection {
     var keyboardKey: KeyEquivalent {
         switch self {
         case .read: "1"
-        case .plans: "2"
-        case .search: "3"
-        case .library: "4"
-        case .settings: "4"
+        case .study: "2"
+        case .plans: "3"
+        case .search: "4"
+        case .library: "5"
+        case .settings: "5"
         }
     }
 }

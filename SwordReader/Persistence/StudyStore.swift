@@ -6,6 +6,7 @@ protocol StudyDataServing: AnyObject {
     func fetchAll() throws -> [StudyItem]
     func toggleBookmark(moduleID: String, reference: String) throws
     func saveNote(_ text: String?, moduleID: String, reference: String) throws
+    func saveHighlight(_ text: String?, moduleID: String, reference: String) throws
 }
 
 enum StudyDataSchemaV1: VersionedSchema {
@@ -87,7 +88,20 @@ final class StudyStore: StudyDataServing {
     }
 
     func saveNote(_ text: String?, moduleID: String, reference: String) throws {
-        let id = Self.id(kind: .note, moduleID: moduleID, reference: reference)
+        try saveText(text, kind: .note, moduleID: moduleID, reference: reference)
+    }
+
+    func saveHighlight(_ text: String?, moduleID: String, reference: String) throws {
+        try saveText(text, kind: .highlight, moduleID: moduleID, reference: reference)
+    }
+
+    private func saveText(
+        _ text: String?,
+        kind: StudyItem.Kind,
+        moduleID: String,
+        reference: String
+    ) throws {
+        let id = Self.id(kind: kind, moduleID: moduleID, reference: reference)
         let normalized = text?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let existing = try record(id: id) {
             if let normalized, !normalized.isEmpty {
@@ -99,7 +113,7 @@ final class StudyStore: StudyDataServing {
             context.insert(
                 Record(
                     id: id,
-                    kind: StudyItem.Kind.note.rawValue,
+                    kind: kind.rawValue,
                     moduleID: moduleID,
                     reference: reference,
                     text: normalized

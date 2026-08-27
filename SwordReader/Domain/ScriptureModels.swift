@@ -458,6 +458,7 @@ struct StudyItem: Identifiable, Hashable, Sendable {
     enum Kind: String, Hashable, Sendable {
         case bookmark
         case note
+        case highlight
     }
 
     var id: String { "\(kind.rawValue):\(moduleID):\(reference)" }
@@ -469,6 +470,7 @@ struct StudyItem: Identifiable, Hashable, Sendable {
 
 enum AppSection: String, CaseIterable, Identifiable, Sendable {
     case read
+    case study
     case plans
     case search
     case library
@@ -483,6 +485,7 @@ enum AppSection: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .read: String(localized: "Read")
+        case .study: String(localized: "Notes & Highlights")
         case .plans: String(localized: "Plans")
         case .search: String(localized: "Search")
         case .library: String(localized: "Library")
@@ -493,6 +496,7 @@ enum AppSection: String, CaseIterable, Identifiable, Sendable {
     var systemImage: String {
         switch self {
         case .read: "book.pages"
+        case .study: "highlighter"
         case .plans: "calendar"
         case .search: "magnifyingglass"
         case .library: "books.vertical"

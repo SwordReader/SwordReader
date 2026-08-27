@@ -47,6 +47,7 @@
 		B8A3B1A45FCFA16787DC569C /* SwordReaderWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FFF9F7612224C5049A38F285 /* SwordReaderWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BC244FC7AD65C73C2993ABFB /* FeedbackReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE0C9255365974501D29A58 /* FeedbackReport.swift */; };
 		BCC2733314D41E38215A6660 /* ModuleSourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FB9904985945090F1AE920 /* ModuleSourcesView.swift */; };
+		BD283C5A8B0691CD1679B8F3 /* StudyItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0952C3F23C3C5F340C6A9133 /* StudyItemsView.swift */; };
 		BE1539567FA191395F00429E /* SwordReaderWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBDDD380A2DBC81DCD252FE /* SwordReaderWatchApp.swift */; };
 		C3207A64496F3151B78A3775 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6CFB6AFF829370098E85374A /* PrivacyInfo.xcprivacy */; };
 		C3702C2A075B71841E477363 /* AppModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B339F32346BF8D819B510313 /* AppModelTests.swift */; };
@@ -66,6 +67,7 @@
 		F77AE960E371172484B061CC /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD31039C38AF776EE199BD39 /* SearchView.swift */; };
 		FA41661C793F5DA18FB1C312 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD31039C38AF776EE199BD39 /* SearchView.swift */; };
 		FD7F5E2AC675FA1F8CD2EEE3 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD0644B96E4B1306F66EBF6 /* FeedbackView.swift */; };
+		FEA45CC95C1633236773C888 /* StudyItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0952C3F23C3C5F340C6A9133 /* StudyItemsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +103,7 @@
 
 /* Begin PBXFileReference section */
 		07CE999C39AF639F6A5DAAAE /* ReadingPlanReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingPlanReminderScheduler.swift; sourceTree = "<group>"; };
+		0952C3F23C3C5F340C6A9133 /* StudyItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyItemsView.swift; sourceTree = "<group>"; };
 		12E1E8FB5D3F6DA959D2262C /* ScriptureModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptureModels.swift; sourceTree = "<group>"; };
 		16F1353239778C7BDA6745BE /* SwordReaderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwordReaderApp.swift; sourceTree = "<group>"; };
 		1741643992A27FFAFA934371 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -346,6 +349,7 @@
 			isa = PBXGroup;
 			children = (
 				F9F56BD8D43DB695CDBF6FA1 /* ReaderView.swift */,
+				0952C3F23C3C5F340C6A9133 /* StudyItemsView.swift */,
 			);
 			path = Reader;
 			sourceTree = "<group>";
@@ -542,6 +546,7 @@
 				83EE1E8A576CC2D940596B8E /* ScriptureModels.swift in Sources */,
 				B57C1C554734A5FFAC2B4AE3 /* ScriptureService.swift in Sources */,
 				F77AE960E371172484B061CC /* SearchView.swift in Sources */,
+				FEA45CC95C1633236773C888 /* StudyItemsView.swift in Sources */,
 				E7E464A945855B2B7D586AEC /* StudyStore.swift in Sources */,
 				6A351D71793BE44657B5FA4A /* SwordReaderApp.swift in Sources */,
 				86E7749B2AB62AE5490BA88C /* SwordReaderCommands.swift in Sources */,
@@ -580,6 +585,7 @@
 				D99C4EB13C43952B2533BC3D /* ScriptureModels.swift in Sources */,
 				5F8082E8C38A18BA4984E15F /* ScriptureService.swift in Sources */,
 				FA41661C793F5DA18FB1C312 /* SearchView.swift in Sources */,
+				BD283C5A8B0691CD1679B8F3 /* StudyItemsView.swift in Sources */,
 				490B7C09AAEE89F570BE2493 /* StudyStore.swift in Sources */,
 				7188B75C2FE76BDD8F424BDE /* SwordReaderApp.swift in Sources */,
 				3BAF876C5E73FDE361F42B85 /* SwordReaderCommands.swift in Sources */,

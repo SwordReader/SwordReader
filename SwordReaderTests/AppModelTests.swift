@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct AppModelTests {
     @Test func primaryNavigationExcludesSettings() {
-        #expect(AppSection.primarySections == [.read, .plans, .search, .library])
+        #expect(AppSection.primarySections == [.read, .study, .plans, .search, .library])
         #expect(AppSection.allCases.contains(.settings))
     }
 
@@ -806,6 +806,22 @@ struct AppModelTests {
         #expect(model.note(reference: "John 3:16") == nil)
     }
 
+    @Test func selectedTextCanBeSavedAsAHighlight() async {
+        let store = FakeStudyStore()
+        let model = AppModel(
+            service: FakeScriptureService(),
+            studyStore: store
+        )
+        await model.start()
+
+        await model.saveHighlight("For God so loved", reference: "John 3:16")
+
+        #expect(model.highlight(reference: "John 3:16") == "For God so loved")
+        #expect(model.studyItems.contains {
+            $0.kind == .highlight && $0.reference == "John 3:16"
+        })
+    }
+
     @Test func comparisonPreservesRequestedModuleOrder() async {
         let service = FakeScriptureService(modules: [
             BibleModule(id: "WEB", title: "World English Bible", language: "en", version: nil, copyright: nil),
@@ -914,6 +930,17 @@ private final class FakeStudyStore: StudyDataServing {
         if let text, !text.isEmpty {
             items.append(
                 StudyItem(kind: .note, moduleID: moduleID, reference: reference, text: text)
+            )
+        }
+    }
+
+    func saveHighlight(_ text: String?, moduleID: String, reference: String) throws {
+        items.removeAll {
+            $0.kind == .highlight && $0.moduleID == moduleID && $0.reference == reference
+        }
+        if let text, !text.isEmpty {
+            items.append(
+                StudyItem(kind: .highlight, moduleID: moduleID, reference: reference, text: text)
             )
         }
     }

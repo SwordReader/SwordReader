@@ -381,10 +381,33 @@ final class AppModel {
         }?.text
     }
 
+    func highlight(reference: String) -> String? {
+        guard let selectedModuleID else { return nil }
+        return studyItems.first {
+            $0.kind == .highlight
+                && $0.moduleID == selectedModuleID
+                && $0.reference == reference
+        }?.text
+    }
+
     func toggleBookmark(reference: String) async {
         guard let selectedModuleID, let studyStore else { return }
         do {
             try studyStore.toggleBookmark(
+                moduleID: selectedModuleID,
+                reference: reference
+            )
+            studyItems = try studyStore.fetchAll()
+        } catch {
+            presentedError = PresentedError(error)
+        }
+    }
+
+    func saveHighlight(_ text: String?, reference: String) async {
+        guard let selectedModuleID, let studyStore else { return }
+        do {
+            try studyStore.saveHighlight(
+                text,
                 moduleID: selectedModuleID,
                 reference: reference
             )
