@@ -515,8 +515,69 @@ final class AppModel {
         }
 
         readerTabs[index].destination = destination
+        if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == tabID }) {
+            do {
+                let chapter = try await service.chapter(
+                    destination.reference,
+                    moduleID: moduleID
+                )
+                sideBySidePanes[paneIndex] = SideBySideReaderPane(
+                    id: tabID,
+                    destination: destination,
+                    chapter: chapter
+                )
+            } catch {
+                presentedError = PresentedError(error)
+                return
+            }
+        }
         if selectedReaderTabID == tabID {
             await open(destination: destination)
+        }
+    }
+
+    func readerBooks(moduleID: String) async -> [BibleBook] {
+        do {
+            return try await service.books(moduleID: moduleID)
+        } catch {
+            presentedError = PresentedError(error)
+            return []
+        }
+    }
+
+    func setReaderTabReference(
+        _ tabID: ReaderTab.ID,
+        book: BibleBook,
+        chapter chapterNumber: Int
+    ) async {
+        guard book.chapterCount >= chapterNumber,
+              chapterNumber > 0,
+              let tabIndex = readerTabs.firstIndex(where: { $0.id == tabID }),
+              let moduleID = readerTabs[tabIndex].destination.moduleID
+        else { return }
+
+        let destination = ReaderDestination(
+            moduleID: moduleID,
+            reference: "\(book.name) \(chapterNumber)"
+        )
+        do {
+            let loadedChapter = try await service.chapter(
+                destination.reference,
+                moduleID: moduleID
+            )
+            readerTabs[tabIndex].destination = destination
+            if let paneIndex = sideBySidePanes.firstIndex(where: { $0.id == tabID }) {
+                sideBySidePanes[paneIndex] = SideBySideReaderPane(
+                    id: tabID,
+                    destination: destination,
+                    chapter: loadedChapter
+                )
+            }
+            if selectedReaderTabID == tabID {
+                await open(destination: destination)
+            }
+        } catch {
+            presentedError = PresentedError(error)
         }
     }
 

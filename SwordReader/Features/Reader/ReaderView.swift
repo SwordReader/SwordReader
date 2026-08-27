@@ -270,13 +270,8 @@ struct ReaderView: View {
 
     private func sideBySidePane(_ pane: SideBySideReaderPane) -> some View {
         VStack(spacing: 0) {
-            Text(model.readerTabTitle(ReaderTab(id: pane.id, destination: pane.destination)))
-                .font(.headline)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                .background(.bar)
+            SideBySidePaneHeader(pane: pane)
+                .environment(model)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: model.readerSpacing.verseSpacing) {
@@ -353,6 +348,87 @@ struct ReaderView: View {
         .disabled(!model.canMoveToNextChapter)
         .keyboardShortcut(.rightArrow, modifiers: [.command])
         .help("Next Chapter")
+    }
+}
+
+private struct SideBySidePaneHeader: View {
+    @Environment(AppModel.self) private var model
+    let pane: SideBySideReaderPane
+    @State private var books: [BibleBook] = []
+
+    private var moduleTitle: String {
+        model.modules.first { $0.id == pane.destination.moduleID }?.title
+            ?? pane.destination.moduleID
+            ?? "Bible"
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Menu {
+                ForEach(model.modules) { module in
+                    Button {
+                        Task {
+                            await model.setReaderTabModule(pane.id, moduleID: module.id)
+                        }
+                    } label: {
+                        if module.id == pane.destination.moduleID {
+                            Label(module.title, systemImage: "checkmark")
+                        } else {
+                            Text(module.title)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(moduleTitle)
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                }
+                .font(.headline)
+            }
+            .menuIndicator(.hidden)
+            .help("Change Module")
+
+            Menu {
+                ForEach(books) { book in
+                    Menu(book.name) {
+                        ForEach(1...book.chapterCount, id: \.self) { chapter in
+                            Button("Chapter \(chapter)") {
+                                Task {
+                                    await model.setReaderTabReference(
+                                        pane.id,
+                                        book: book,
+                                        chapter: chapter
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(pane.destination.reference)
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                }
+                .font(.headline)
+            }
+            .menuIndicator(.hidden)
+            .help("Change Book or Chapter")
+
+            Spacer(minLength: 0)
+        }
+        .lineLimit(1)
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(.bar)
+        .task(id: pane.destination.moduleID) {
+            guard let moduleID = pane.destination.moduleID else {
+                books = []
+                return
+            }
+            books = await model.readerBooks(moduleID: moduleID)
+        }
     }
 }
 

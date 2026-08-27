@@ -345,6 +345,24 @@ struct AppModelTests {
         #expect(model.reference == "John 2")
     }
 
+    @Test func changingModuleInSplitViewReloadsThePane() async throws {
+        let service = FakeScriptureService(modules: [
+            BibleModule(id: "WEB", title: "World English Bible", language: "en", version: nil, copyright: nil),
+            BibleModule(id: "KJV", title: "King James Version", language: "en", version: nil, copyright: nil),
+        ])
+        let model = AppModel(service: service)
+        await model.start()
+        model.createReaderTab()
+        let selectedTab = try #require(model.selectedReaderTabID)
+        await model.showSelectedTabsSideBySide()
+
+        await model.setReaderTabModule(selectedTab, moduleID: "KJV")
+
+        let pane = try #require(model.sideBySidePanes.first { $0.id == selectedTab })
+        #expect(pane.destination.moduleID == "KJV")
+        #expect(pane.chapter.moduleID == "KJV")
+    }
+
     @Test func closingMergedTabClearsStableSideBySidePair() async throws {
         let model = AppModel(service: FakeScriptureService())
         await model.start()
