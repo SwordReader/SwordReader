@@ -426,6 +426,20 @@ struct AppModelTests {
         #expect(restored.readerFontSize == 23.5)
     }
 
+    @Test func openReaderModelReloadsPreferencesChangedBySettingsModel() throws {
+        let defaults = try #require(UserDefaults(suiteName: #function))
+        defaults.removePersistentDomain(forName: #function)
+        let readerModel = AppModel(service: FakeScriptureService(), defaults: defaults)
+        let settingsModel = AppModel(service: FakeScriptureService(), defaults: defaults)
+
+        settingsModel.setReaderFontSize(25.5)
+        settingsModel.setShowsRedLetterText(false)
+        readerModel.reloadReaderPreferences()
+
+        #expect(readerModel.readerFontSize == 25.5)
+        #expect(!readerModel.showsRedLetterText)
+    }
+
     @Test func completedOnboardingReturnsOnLaunchWhenNoBibleIsInstalled() async throws {
         let defaults = try #require(UserDefaults(suiteName: #function))
         defaults.removePersistentDomain(forName: #function)

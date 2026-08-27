@@ -102,6 +102,11 @@ private struct SwordReaderSceneView: View {
                 model.reloadReaderPreferences()
             }
             .onReceive(NotificationCenter.default.publisher(
+                for: .readerPreferencesDidChange
+            )) { _ in
+                model.reloadReaderPreferences()
+            }
+            .onReceive(NotificationCenter.default.publisher(
                 for: CrashDiagnosticStore.didSaveNotification
             )) { _ in
                 model.reloadPendingCrashDiagnostic()

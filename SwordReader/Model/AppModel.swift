@@ -2,6 +2,12 @@ import Foundation
 import Observation
 import SwordKit
 
+extension Notification.Name {
+    static let readerPreferencesDidChange = Notification.Name(
+        "SwordReader.readerPreferencesDidChange"
+    )
+}
+
 @MainActor
 @Observable
 final class AppModel {
@@ -298,6 +304,7 @@ final class AppModel {
     func setReaderFontSize(_ size: Double) {
         readerFontSize = min(max(size, 12), 32)
         defaults.set(readerFontSize, forKey: Self.readerFontSizeKey)
+        NotificationCenter.default.post(name: .readerPreferencesDidChange, object: nil)
     }
 
     func setReaderSpacing(_ spacing: ReaderSpacing) {
@@ -313,6 +320,7 @@ final class AppModel {
     func setShowsRedLetterText(_ shows: Bool) {
         showsRedLetterText = shows
         defaults.set(shows, forKey: Self.showsRedLetterTextKey)
+        NotificationCenter.default.post(name: .readerPreferencesDidChange, object: nil)
     }
 
     func reloadReaderPreferences() {
