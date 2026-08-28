@@ -356,12 +356,35 @@ struct AppModelTests {
         #expect(model.sideBySidePanes.map(\.id) == [firstTab, secondTab])
         #expect(model.sideBySidePanes.map(\.destination.reference) == [firstDestination.reference, "John 2"])
         #expect(model.readerTabs.count == 2)
+        #expect(model.sideBySideTabTitle == "John 1 | John 2")
 
         model.splitSideBySideTabs()
 
         #expect(model.sideBySidePanes.isEmpty)
         #expect(model.readerTabs.map(\.id) == [firstTab, secondTab])
         #expect(model.selectedReaderTabID == secondTab)
+        #expect(model.reference == "John 2")
+    }
+
+    @Test func searchResultOpensInANewReaderTabAndLeavesSplitView() async throws {
+        let model = AppModel(service: FakeScriptureService())
+        await model.start()
+        model.createReaderTab()
+        await model.showSelectedTabsSideBySide()
+        let previousTabIDs = Set(model.readerTabs.map(\.id))
+
+        await model.openSearchResult(BibleSearchResult(
+            reference: "John 2:1",
+            moduleID: "WEB",
+            text: "On the third day",
+            score: 1
+        ))
+
+        #expect(model.section == .read)
+        #expect(model.sideBySidePair == nil)
+        #expect(model.readerTabs.count == 3)
+        #expect(model.selectedReaderTabID.map { !previousTabIDs.contains($0) } == true)
+        #expect(model.readerTabs.last?.destination.reference == "John 2:1")
         #expect(model.reference == "John 2")
     }
 

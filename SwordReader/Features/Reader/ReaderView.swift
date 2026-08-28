@@ -96,28 +96,38 @@ struct ReaderView: View {
     }
 
     private func chapterContent(_ chapter: BibleChapter) -> some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: model.readerSpacing.verseSpacing) {
-                ForEach(chapter.verses) { verse in
-                    VerseView(verse: verse)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: model.readerSpacing.verseSpacing) {
+                    ForEach(chapter.verses) { verse in
+                        VerseView(verse: verse)
+                            .id(verse.reference)
+                    }
                 }
+                .frame(maxWidth: 720, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.vertical, 24)
             }
-            .frame(maxWidth: 720, alignment: .leading)
-            .padding(.horizontal)
-            .padding(.vertical, 24)
-        }
-        .contentMargins(.bottom, 56, for: .scrollContent)
-        .gesture(
-            DragGesture(minimumDistance: 60).onEnded { value in
-                guard abs(value.translation.width)
-                    > abs(value.translation.height) * 1.5
+            .contentMargins(.bottom, 56, for: .scrollContent)
+            .task(id: model.focusedVerseReference) {
+                guard let reference = model.focusedVerseReference,
+                      chapter.verses.contains(where: { $0.reference == reference })
                 else { return }
-
-                model.moveChapter(
-                    by: value.translation.width < 0 ? 1 : -1
-                )
+                await Task.yield()
+                proxy.scrollTo(reference, anchor: .center)
             }
-        )
+            .gesture(
+                DragGesture(minimumDistance: 60).onEnded { value in
+                    guard abs(value.translation.width)
+                        > abs(value.translation.height) * 1.5
+                    else { return }
+
+                    model.moveChapter(
+                        by: value.translation.width < 0 ? 1 : -1
+                    )
+                }
+            )
+        }
     }
 
     private func keyedContent(_ entry: KeyedModuleEntry) -> some View {
@@ -619,86 +629,22 @@ private struct ReaderTabBar: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 6) {
-                ForEach(model.readerTabs) { tab in
-                    HStack(spacing: 4) {
-                        Button(model.readerTabTitle(tab)) {
-                            Task { await model.selectReaderTab(tab.id) }
-                        }
+                if let pair = model.sideBySidePair,
+                   let title = model.sideBySideTabTitle {
+                    Text(title)
                         .lineLimit(1)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color.accentColor.opacity(0.16), in: .rect(cornerRadius: 8))
 
-                        Button("Close Tab", systemImage: "xmark") {
-                            Task { await model.closeReaderTab(tab.id) }
-                        }
-                        .labelStyle(.iconOnly)
-                        .disabled(model.readerTabs.count == 1)
-                        .help("Close Tab")
+                    ForEach(model.readerTabs.filter {
+                        $0.id != pair.leading.id && $0.id != pair.trailing.id
+                    }) { tab in
+                        tabChip(tab)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(
-                        tab.id == model.selectedReaderTabID
-                            ? Color.accentColor.opacity(0.16)
-                            : Color.secondary.opacity(0.08),
-                        in: .rect(cornerRadius: 8)
-                    )
-                    .draggable(tab.id.uuidString)
-                    .dropDestination(for: String.self) { identifiers, _ in
-                        guard let draggedID = identifiers.compactMap({
-                            UUID(uuidString: $0)
-                        }).first else { return false }
-                        model.moveReaderTab(draggedID, to: tab.id)
-                        return true
-                    }
-                    .contextMenu {
-                        Menu("Module", systemImage: "books.vertical") {
-                            ForEach(model.modules) { module in
-                                Button {
-                                    Task {
-                                        await model.setReaderTabModule(
-                                            tab.id,
-                                            moduleID: module.id
-                                        )
-                                    }
-                                } label: {
-                                    if tab.destination.moduleID == module.id {
-                                        Label(module.title, systemImage: "checkmark")
-                                    } else {
-                                        Text(module.title)
-                                    }
-                                }
-                            }
-                            if !model.keyedModules.isEmpty {
-                                Divider()
-                                ForEach(model.keyedModules) { module in
-                                    Button {
-                                        Task {
-                                            await model.setReaderTabModule(
-                                                tab.id,
-                                                moduleID: module.id
-                                            )
-                                        }
-                                    } label: {
-                                        if tab.destination.moduleID == module.id {
-                                            Label(module.title, systemImage: "checkmark")
-                                        } else {
-                                            Text(module.title)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if let neighbor = model.neighboringReaderTab(for: tab.id) {
-                            Divider()
-                            Button(
-                                "Show Side by Side with \(model.readerTabTitle(neighbor))",
-                                systemImage: "rectangle.split.2x1"
-                            ) {
-                                Task {
-                                    await model.showTabsSideBySide(startingWith: tab.id)
-                                }
-                            }
-                        }
+                } else {
+                    ForEach(model.readerTabs) { tab in
+                        tabChip(tab)
                     }
                 }
 
@@ -734,6 +680,73 @@ private struct ReaderTabBar: View {
         }
         .background(.bar)
         .accessibilityLabel("Reading Tabs")
+    }
+
+    private func tabChip(_ tab: ReaderTab) -> some View {
+        HStack(spacing: 4) {
+            Button(model.readerTabTitle(tab)) {
+                Task { await model.selectReaderTab(tab.id) }
+            }
+            .lineLimit(1)
+
+            Button("Close Tab", systemImage: "xmark") {
+                Task { await model.closeReaderTab(tab.id) }
+            }
+            .labelStyle(.iconOnly)
+            .disabled(model.readerTabs.count == 1)
+            .help("Close Tab")
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(
+            tab.id == model.selectedReaderTabID
+                ? Color.accentColor.opacity(0.16)
+                : Color.secondary.opacity(0.08),
+            in: .rect(cornerRadius: 8)
+        )
+        .draggable(tab.id.uuidString)
+        .dropDestination(for: String.self) { identifiers, _ in
+            guard let draggedID = identifiers.compactMap({
+                UUID(uuidString: $0)
+            }).first else { return false }
+            model.moveReaderTab(draggedID, to: tab.id)
+            return true
+        }
+        .contextMenu {
+            Menu("Module", systemImage: "books.vertical") {
+                ForEach(model.modules) { module in
+                    moduleButton(module.id, title: module.title, for: tab)
+                }
+                if !model.keyedModules.isEmpty {
+                    Divider()
+                    ForEach(model.keyedModules) { module in
+                        moduleButton(module.id, title: module.title, for: tab)
+                    }
+                }
+            }
+            if let neighbor = model.neighboringReaderTab(for: tab.id) {
+                Divider()
+                Button(
+                    "Show Side by Side with \(model.readerTabTitle(neighbor))",
+                    systemImage: "rectangle.split.2x1"
+                ) {
+                    Task { await model.showTabsSideBySide(startingWith: tab.id) }
+                }
+            }
+        }
+    }
+
+    private func moduleButton(_ moduleID: String, title: String, for tab: ReaderTab) -> some View {
+        Button {
+            Task { await model.setReaderTabModule(tab.id, moduleID: moduleID) }
+        } label: {
+            if tab.destination.moduleID == moduleID {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Text(title)
+            }
+        }
     }
 }
 

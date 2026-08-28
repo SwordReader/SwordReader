@@ -19,7 +19,7 @@ struct SearchView: View {
                     Section {
                         ForEach(model.searchResults) { result in
                             Button {
-                                model.open(reference: result.reference)
+                                Task { await model.openSearchResult(result) }
                             } label: {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(result.reference).font(.headline)

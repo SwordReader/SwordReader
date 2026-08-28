@@ -23,6 +23,7 @@ final class AppModel {
     private(set) var keyedModules: [KeyedModule] = []
     private(set) var readerTabs: [ReaderTab] = []
     private(set) var selectedReaderTabID: ReaderTab.ID?
+    private(set) var focusedVerseReference: String?
     private(set) var sideBySidePanes: [SideBySideReaderPane] = []
     private(set) var selectedModuleID: String?
     private(set) var books: [BibleBook] = []
@@ -735,6 +736,36 @@ final class AppModel {
             leading: sideBySidePanes[0],
             trailing: sideBySidePanes[1]
         )
+    }
+
+    var sideBySideTabTitle: String? {
+        guard let pair = sideBySidePair else { return nil }
+        return "\(pair.leading.destination.reference) | \(pair.trailing.destination.reference)"
+    }
+
+    func openSearchResult(_ result: BibleSearchResult) async {
+        let moduleID = modules.first(where: {
+            $0.id.caseInsensitiveCompare(result.moduleID) == .orderedSame
+        })?.id ?? selectedModuleID ?? modules.first?.id
+        guard let moduleID else { return }
+
+        sideBySidePanes = []
+        section = .read
+        let destination = ReaderDestination(
+            moduleID: moduleID,
+            reference: result.reference
+        )
+        let tab = ReaderTab(destination: destination)
+        readerTabs.append(tab)
+        selectedReaderTabID = tab.id
+        await loadSelectedReaderTab(tab)
+
+        // Keep the verse-level reference in the tab title even though the reader
+        // loads its containing chapter.
+        if let index = readerTabs.firstIndex(where: { $0.id == tab.id }) {
+            readerTabs[index].destination = destination
+        }
+        focusedVerseReference = result.reference
     }
 
     func neighboringReaderTab(for tabID: ReaderTab.ID) -> ReaderTab? {
