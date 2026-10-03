@@ -386,6 +386,11 @@ struct AppModelTests {
         #expect(model.selectedReaderTabID.map { !previousTabIDs.contains($0) } == true)
         #expect(model.readerTabs.last?.destination.reference == "John 2:1")
         #expect(model.reference == "John 2")
+        let group = try #require(model.readerSplitGroups.first)
+        #expect(model.visibleReaderTabs.count == 2)
+        await model.selectReaderTab(group.leadingID)
+        #expect(model.sideBySidePair != nil)
+        #expect(model.readerSplitGroups.count == 1)
     }
 
     @Test func changingModuleInSplitViewReloadsThePane() async throws {
@@ -408,6 +413,55 @@ struct AppModelTests {
             return
         }
         #expect(chapter.moduleID == "KJV")
+    }
+
+    @Test func splitGroupsRestoreAndSplitWithoutLosingDestinations() async throws {
+        let model = AppModel(service: FakeScriptureService())
+        await model.start()
+        model.createReaderTab()
+        model.select(bookID: "John", chapter: 2)
+        await model.showSelectedTabsSideBySide()
+        let session = try #require(model.readerTabSession)
+        let encoded = try #require(session.encoded)
+        let decoded = try #require(ReaderTabSession(encoded: encoded))
+        let restored = AppModel(service: FakeScriptureService())
+        await restored.start()
+        await restored.restoreReaderTabs(decoded)
+        #expect(restored.readerSplitGroups == model.readerSplitGroups)
+        #expect(restored.visibleReaderTabs.count == 1)
+        #expect(restored.sideBySidePair != nil)
+        restored.splitSideBySideTabs()
+        #expect(restored.visibleReaderTabs.count == 2)
+        #expect(restored.readerTabs == model.readerTabs)
+    }
+
+    @Test func olderReaderSessionsStillDecodeWithoutSplitGroups() async throws {
+        let model = AppModel(service: FakeScriptureService())
+        await model.start()
+        let encoded = try #require(model.readerTabSession?.encoded)
+        let data = try #require(Data(base64Encoded: encoded))
+        var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object.removeValue(forKey: "splitGroups")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+        let session = try #require(ReaderTabSession(encoded: legacyData.base64EncodedString()))
+        #expect(session.splitGroups.isEmpty)
+        #expect(session.tabs == model.readerTabs)
+    }
+
+    @Test func closingSplitGroupSelectsTheRemainingWorkspace() async throws {
+        let model = AppModel(service: FakeScriptureService())
+        await model.start()
+        model.createReaderTab()
+        await model.showSelectedTabsSideBySide()
+        let group = try #require(model.readerSplitGroups.first)
+        model.createReaderTab()
+        let remainingID = try #require(model.selectedReaderTabID)
+        await model.selectReaderTab(group.leadingID)
+        await model.closeReaderGroup(group)
+        #expect(model.readerTabs.map(\.id) == [remainingID])
+        #expect(model.selectedReaderTabID == remainingID)
+        #expect(model.readerSplitGroups.isEmpty)
+        #expect(model.sideBySidePair == nil)
     }
 
     @Test func bibleAndDictionaryCanShareSplitView() async throws {

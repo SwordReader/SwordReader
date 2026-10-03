@@ -25,6 +25,7 @@ final class AppModel {
     private(set) var selectedReaderTabID: ReaderTab.ID?
     private(set) var focusedVerseReference: String?
     private(set) var sideBySidePanes: [SideBySideReaderPane] = []
+    private(set) var readerSplitGroups: [ReaderSplitGroup] = []
     private(set) var selectedModuleID: String?
     private(set) var books: [BibleBook] = []
     private(set) var selectedBookID: String?
@@ -457,7 +458,8 @@ final class AppModel {
         guard let selectedReaderTabID else { return nil }
         return ReaderTabSession(
             tabs: readerTabs,
-            selectedTabID: selectedReaderTabID
+            selectedTabID: selectedReaderTabID,
+            splitGroups: readerSplitGroups
         )
     }
 
@@ -484,6 +486,7 @@ final class AppModel {
         }
         readerTabs.append(tab)
         selectedReaderTabID = tab.id
+        sideBySidePanes = []
     }
 
     func selectReaderTab(_ tabID: ReaderTab.ID) async {
@@ -491,7 +494,11 @@ final class AppModel {
               let tab = readerTabs.first(where: { $0.id == tabID })
         else { return }
         selectedReaderTabID = tabID
+        sideBySidePanes = []
         await loadSelectedReaderTab(tab)
+        if let group = splitGroup(for: tabID) {
+            await loadSplitGroup(group)
+        }
     }
 
     func moveReaderTab(_ tabID: ReaderTab.ID, to targetID: ReaderTab.ID) {
@@ -728,7 +735,43 @@ final class AppModel {
     }
 
     var canShowSelectedTabsSideBySide: Bool {
-        readerTabs.count > 1 && selectedReaderTabID != nil
+        selectedReaderTabID.flatMap { neighboringReaderTab(for: $0) } != nil
+    }
+
+    func splitGroup(for tabID: ReaderTab.ID) -> ReaderSplitGroup? {
+        readerSplitGroups.first { $0.contains(tabID) }
+    }
+
+    var visibleReaderTabs: [ReaderTab] {
+        readerTabs.filter { tab in
+            !readerSplitGroups.contains { $0.trailingID == tab.id }
+        }
+    }
+
+    func splitGroupTitle(_ group: ReaderSplitGroup) -> String {
+        [group.leadingID, group.trailingID].compactMap { id in
+            readerTabs.first { $0.id == id }.map {
+                $0.contentKind == .keyed
+                    ? Self.keyDisplayTitle($0.destination.reference)
+                    : $0.destination.reference
+            }
+        }.joined(separator: " | ")
+    }
+
+    func splitReaderGroup(_ group: ReaderSplitGroup) {
+        readerSplitGroups.removeAll { $0 == group }
+        if selectedReaderTabID.map(group.contains) == true { sideBySidePanes = [] }
+    }
+
+    func closeReaderGroup(_ group: ReaderSplitGroup) async {
+        guard readerTabs.count > 2 else { return }
+        let wasSelected = selectedReaderTabID.map(group.contains) == true
+        readerTabs.removeAll { group.contains($0.id) }
+        readerSplitGroups.removeAll { $0 == group }
+        if wasSelected, let replacement = visibleReaderTabs.first {
+            selectedReaderTabID = nil
+            await selectReaderTab(replacement.id)
+        }
     }
 
     var sideBySidePair: SideBySideReaderPair? {
@@ -770,11 +813,13 @@ final class AppModel {
     }
 
     func neighboringReaderTab(for tabID: ReaderTab.ID) -> ReaderTab? {
-        guard readerTabs.count > 1,
-              let index = readerTabs.firstIndex(where: { $0.id == tabID })
+        guard splitGroup(for: tabID) == nil else { return nil }
+        let candidates = readerTabs.filter { splitGroup(for: $0.id) == nil }
+        guard candidates.count > 1,
+              let index = candidates.firstIndex(where: { $0.id == tabID })
         else { return nil }
-        let neighborIndex = index < readerTabs.count - 1 ? index + 1 : index - 1
-        return readerTabs[neighborIndex]
+        let neighborIndex = index < candidates.count - 1 ? index + 1 : index - 1
+        return candidates[neighborIndex]
     }
 
     func showSelectedTabsSideBySide() async {
@@ -786,6 +831,23 @@ final class AppModel {
         guard let neighbor = neighboringReaderTab(for: tabID) else { return }
         let paneIDs = Set([tabID, neighbor.id])
         let tabs = readerTabs.filter { paneIDs.contains($0.id) }
+        guard tabs.count == 2 else { return }
+        let group = ReaderSplitGroup(leadingID: tabs[0].id, trailingID: tabs[1].id)
+        await selectReaderTab(tabID)
+        await loadSplitGroup(group)
+        if sideBySidePanes.map(\.id) == [group.leadingID, group.trailingID],
+           splitGroup(for: group.leadingID) == nil,
+           splitGroup(for: group.trailingID) == nil {
+            readerSplitGroups.append(group)
+        }
+    }
+
+    private func loadSplitGroup(_ group: ReaderSplitGroup) async {
+        let selectedID = selectedReaderTabID
+        let restoringSavedGroup = readerSplitGroups.contains(group)
+        let tabs = [group.leadingID, group.trailingID].compactMap { id in
+            readerTabs.first { $0.id == id }
+        }
 
         do {
             var panes: [SideBySideReaderPane] = []
@@ -812,14 +874,24 @@ final class AppModel {
                     )
                 )
             }
-            guard panes.count == 2 else { return }
+            guard panes.count == 2, selectedReaderTabID == selectedID,
+                  selectedID.map(group.contains) == true,
+                  !restoringSavedGroup || readerSplitGroups.contains(group),
+                  panes.allSatisfy({ pane in
+                      readerTabs.contains { $0.id == pane.id && $0.destination == pane.destination }
+                  }) else { return }
             sideBySidePanes = panes
         } catch {
+            guard selectedReaderTabID == selectedID,
+                  !restoringSavedGroup || readerSplitGroups.contains(group) else { return }
             presentedError = PresentedError(error)
         }
     }
 
     func splitSideBySideTabs() {
+        if let selectedReaderTabID, let group = splitGroup(for: selectedReaderTabID) {
+            readerSplitGroups.removeAll { $0 == group }
+        }
         sideBySidePanes = []
     }
 
@@ -830,14 +902,15 @@ final class AppModel {
 
         let wasSelected = selectedReaderTabID == tabID
         readerTabs.remove(at: index)
+        readerSplitGroups.removeAll { $0.contains(tabID) }
         if sideBySidePanes.contains(where: { $0.id == tabID }) {
-            splitSideBySideTabs()
+            sideBySidePanes = []
         }
         guard wasSelected else { return }
 
         let replacement = readerTabs[min(index, readerTabs.count - 1)]
-        selectedReaderTabID = replacement.id
-        await loadSelectedReaderTab(replacement)
+        selectedReaderTabID = nil
+        await selectReaderTab(replacement.id)
     }
 
     func restoreReaderTabs(_ session: ReaderTabSession) async {
@@ -851,11 +924,20 @@ final class AppModel {
         guard !availableTabs.isEmpty else { return }
 
         readerTabs = availableTabs
+        var groupedIDs: Set<ReaderTab.ID> = []
+        readerSplitGroups = session.splitGroups.filter { group in
+            let ids = [group.leadingID, group.trailingID]
+            guard group.leadingID != group.trailingID,
+                  ids.allSatisfy({ id in availableTabs.contains { $0.id == id } }),
+                  groupedIDs.isDisjoint(with: ids) else { return false }
+            groupedIDs.formUnion(ids)
+            return true
+        }
         let selectedTab = availableTabs.first {
             $0.id == session.selectedTabID
         } ?? availableTabs[0]
-        selectedReaderTabID = selectedTab.id
-        await loadSelectedReaderTab(selectedTab)
+        selectedReaderTabID = nil
+        await selectReaderTab(selectedTab.id)
     }
 
     private func loadSelectedReaderTab(_ tab: ReaderTab) async {

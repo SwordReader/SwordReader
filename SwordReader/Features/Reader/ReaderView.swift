@@ -629,21 +629,10 @@ private struct ReaderTabBar: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 6) {
-                if let pair = model.sideBySidePair,
-                   let title = model.sideBySideTabTitle {
-                    Text(title)
-                        .lineLimit(1)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(Color.accentColor.opacity(0.16), in: .rect(cornerRadius: 8))
-
-                    ForEach(model.readerTabs.filter {
-                        $0.id != pair.leading.id && $0.id != pair.trailing.id
-                    }) { tab in
-                        tabChip(tab)
-                    }
-                } else {
-                    ForEach(model.readerTabs) { tab in
+                ForEach(model.visibleReaderTabs) { tab in
+                    if let group = model.splitGroup(for: tab.id) {
+                        groupChip(group)
+                    } else {
                         tabChip(tab)
                     }
                 }
@@ -733,6 +722,38 @@ private struct ReaderTabBar: View {
                 ) {
                     Task { await model.showTabsSideBySide(startingWith: tab.id) }
                 }
+            }
+        }
+    }
+
+    private func groupChip(_ group: ReaderSplitGroup) -> some View {
+        let isSelected = model.selectedReaderTabID.map(group.contains) == true
+        return HStack(spacing: 4) {
+            Button {
+                Task { await model.selectReaderTab(group.leadingID) }
+            } label: {
+                Label(model.splitGroupTitle(group), systemImage: "rectangle.split.2x1")
+                    .lineLimit(1)
+            }
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+            Button("Close Split Tab", systemImage: "xmark") {
+                Task { await model.closeReaderGroup(group) }
+            }
+            .labelStyle(.iconOnly)
+            .disabled(model.visibleReaderTabs.count == 1)
+            .help("Close Split Tab")
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(
+            isSelected ? Color.accentColor.opacity(0.16) : Color.secondary.opacity(0.08),
+            in: .rect(cornerRadius: 8)
+        )
+        .contextMenu {
+            Button("Split Back into Tabs", systemImage: "rectangle.split.1x2") {
+                model.splitReaderGroup(group)
             }
         }
     }

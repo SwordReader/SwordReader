@@ -643,16 +643,36 @@ struct SideBySideReaderPair: Hashable, Sendable {
     let trailing: SideBySideReaderPane
 }
 
+struct ReaderSplitGroup: Codable, Hashable, Sendable {
+    let leadingID: ReaderTab.ID
+    let trailingID: ReaderTab.ID
+
+    func contains(_ id: ReaderTab.ID) -> Bool {
+        leadingID == id || trailingID == id
+    }
+}
+
 struct ReaderTabSession: Codable, Hashable, Sendable {
     let tabs: [ReaderTab]
     let selectedTabID: ReaderTab.ID
+    let splitGroups: [ReaderSplitGroup]
 
-    init?(tabs: [ReaderTab], selectedTabID: ReaderTab.ID) {
+    init?(tabs: [ReaderTab], selectedTabID: ReaderTab.ID, splitGroups: [ReaderSplitGroup] = []) {
         guard !tabs.isEmpty,
               tabs.contains(where: { $0.id == selectedTabID })
         else { return nil }
         self.tabs = tabs
         self.selectedTabID = selectedTabID
+        self.splitGroups = splitGroups
+    }
+
+    private enum CodingKeys: String, CodingKey { case tabs, selectedTabID, splitGroups }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        tabs = try container.decode([ReaderTab].self, forKey: .tabs)
+        selectedTabID = try container.decode(ReaderTab.ID.self, forKey: .selectedTabID)
+        splitGroups = try container.decodeIfPresent([ReaderSplitGroup].self, forKey: .splitGroups) ?? []
     }
 
     init?(encoded: String) {
