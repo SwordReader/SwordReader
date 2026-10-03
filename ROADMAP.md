@@ -71,9 +71,14 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
 
 ### Active framework integration (separate worktree)
 
-- Adopt tagged BibleKit/BibleKitSword services and BibleUI reader/catalog
+- [x] Adopt tagged BibleKit/BibleKitSword for app and Watch engine operations;
+  use BibleUI for regular-book text, reference popovers, and custom-feed catalogs.
+  Local macOS tests and generic iOS/watchOS builds pass. Device acceptance and
+  extracting the advanced Scripture study renderer remain pending.
+- Continue BibleUI reader/catalog
   components without losing current rendering, study data, links, or offline use.
-- Add a user-visible custom-feed path with explicit license and trust constraints.
+- [x] Add a user-visible custom-feed path with explicit license and trust
+  constraints, bounded HTTPS transport, and session-only content.
 - Validate macOS, iOS, and Watch consumers before merging. Native shutdown
   reproduction remains a separate SwordKit/host safety task.
 

@@ -4,7 +4,8 @@
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](LICENSE)
 
 SwordReader is a multiplatform SwiftUI Bible reader for iOS, iPadOS, macOS, and
-watchOS. It consumes the public `SwordKit` 0.6.0 package and keeps SWORD modules
+watchOS. It consumes public `SwordKit` 0.6.1, `BibleKit` 0.3.2, and `BibleUI`
+0.2.2 packages and keeps SWORD modules
 in the application's Application Support container.
 
 ## Open and run
@@ -73,6 +74,29 @@ xcodebuild test \
 ```
 
 CI also builds the generic iOS destination to validate iPhone and iPad support.
+
+## Framework boundaries
+
+- ModernSwordAPI maintains the native engine; SwordKit supplies its Swift API,
+  module formats, and transport.
+- BibleKit defines content, reading, navigation, search, attribution, and
+  capabilities. Its optional BibleKitSword adapter owns engine-backed operations.
+- BibleUI supplies reusable rich text, ordered-entry readers, filtered catalogs,
+  and anchored book/chapter controls without importing SwordKit.
+- SwordReader owns scenes, product navigation, storage, study data, Handoff,
+  Watch connectivity, settings, and release policy.
+
+The app's Scripture service and Watch reader use BibleKitSword. Regular book
+text and reference popovers use BibleUI. Library's **Open Content Feed** action
+opens an explicitly chosen HTTPS BibleKit JSON feed using the reusable catalog
+and entry reader. Feeds stay in memory for the current session; there is no
+automatic download, publisher authentication, or entitlement bypass. The app's
+existing advanced Scripture study renderer remains app-owned until its
+selection, lexical links, and annotation behavior can be extracted intact.
+
+Local verification includes macOS tests, generic iOS and watchOS builds, and
+BibleKit's opt-in ASV fidelity check. Physical-device, compact-layout, VoiceOver,
+and publisher-specific acceptance remain separate release gates.
 
 For a clean pre-release audit that also validates metadata and compiles Release
 configurations for every current platform, run:
