@@ -6,6 +6,12 @@ options:
     macOS: "14.0"
     watchOS: "10.0"
 packages:
+  BibleKit:
+    url: https://github.com/SwordReader/BibleKit.git
+    exactVersion: 0.3.0
+  BibleUI:
+    url: https://github.com/SwordReader/BibleUI.git
+    exactVersion: 0.2.0
   SwordKit:
     url: https://github.com/orbeavers14/SwordKit.git
     exactVersion: 0.6.1
@@ -15,6 +21,12 @@ targetTemplates:
     sources:
       - path: SwordReader
     dependencies:
+      - package: BibleKit
+        product: BibleKit
+      - package: BibleKit
+        product: BibleKitSword
+      - package: BibleUI
+        product: BibleUI
       - package: SwordKit
         product: SwordKit
     settings:

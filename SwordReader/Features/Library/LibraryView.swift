@@ -1,5 +1,7 @@
 import Foundation
 import SwiftUI
+import BibleKit
+import BibleUI
 import UniformTypeIdentifiers
 
 struct LibraryView: View {
@@ -347,12 +349,8 @@ private struct KeyedEntryView: View {
             } else {
                 ScrollView {
                     if let entry {
-                        Text(KeyedEntryFormatter.attributedString(for: entry))
+                        BibleReaderText(content: KeyedEntryFormatter.attributedString(for: entry))
                             .font(.system(size: model.readerFontSize, design: model.readerFont.design))
-                            .textSelection(.enabled)
-                            .frame(maxWidth: 720, alignment: .leading)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 20)
                     } else {
                         ProgressView()
                             .frame(maxWidth: .infinity)
@@ -591,31 +589,11 @@ private struct KeyedTabPane: View {
     }
 }
 
-enum KeyedEntryNavigation {
-    static func adjacentKey(to key: String, offset: Int, in keys: [String]) -> String? {
-        guard let index = keys.firstIndex(of: key) else { return nil }
-        let adjacentIndex = index + offset
-        guard keys.indices.contains(adjacentIndex) else { return nil }
-        return keys[adjacentIndex]
-    }
-}
+typealias KeyedEntryNavigation = BibleEntryNavigation
 
+@MainActor
 enum KeyedEntryFormatter {
     static func attributedString(for entry: KeyedModuleEntry) -> AttributedString {
-        let source = entry.html.isEmpty ? entry.text : entry.html
-        guard let data = source.data(using: .utf8),
-              let rendered = try? NSAttributedString(
-                  data: data,
-                  options: [
-                      .documentType: NSAttributedString.DocumentType.html,
-                      .characterEncoding: String.Encoding.utf8.rawValue,
-                  ],
-                  documentAttributes: nil
-              ) else {
-            return AttributedString(entry.text)
-        }
-        var result = AttributedString(rendered)
-        result.font = nil
-        return result
+        BibleRichTextFormatter.attributedString(text: entry.text, html: entry.html)
     }
 }
