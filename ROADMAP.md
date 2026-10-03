@@ -3,10 +3,13 @@
 SwordReader is developed as both a launchable Bible app and an integration test
 bed for public SwordKit releases. Complete and commit one milestone at a time.
 
+Reviewed October 3, 2026 against `main` through `4b890df`. Framework integration
+in the other chat/worktree is in progress and is not yet part of this baseline.
+
 ## Completed
 
 - [x] Shared observable application model
-- [x] Public SwordKit 0.6.0 dependency
+- [x] Public SwordKit 0.6.1 dependency
 - [x] Adaptive iPhone, iPad, and Mac navigation shell
 - [x] Chapter reading and translation selection
 - [x] Cancellable Scripture search
@@ -49,14 +52,30 @@ bed for public SwordKit releases. Complete and commit one milestone at a time.
 - [x] System-selected iOS and iPadOS light, dark, and tinted app-icon artwork
   with release-time dimension, opacity, and appearance validation
 - [x] GitHub-hosted macOS preview releases with an in-app latest-release check
-- [x] Native Settings/Preferences with persistent red-letter and continuous font
-  sizing controls, a live reader preview, and confirmed deletion of installed modules
+- [x] Native Settings/Preferences with persistent red-letter controls and confirmed
+  deletion of installed modules; shared font/style controls live in the reader toolbar
 - [x] System-aware persistent module language filtering, independent per-tab module
-  switching, crash-safe split reading, and native Mac launch and Settings behavior
+  switching, split-reading fixes, and native Mac launch and Settings behavior
 - [x] Privacy-first Apple MetricKit crash diagnostics with local-only retention,
   editable review, full-payload sharing, and user-approved GitHub issue drafts
+- [x] Independent Bible/keyed-module pane navigation and module switching
+- [x] Native selected-text copy, notes, and Pink/Blue/Yellow/Green highlight actions
+- [x] Internal SWORD link routing and module-download entry point from the reader menu
+- [x] Markup-free search results opening a new tab at the clicked reference
+- [x] Persistent selectable/closable split-tab groups with `Reference | Reference`
+  titles, session restoration, and splitting back into individual tabs
+- [x] Stale-chapter completion protection and Xcode 27/Swift 6.4 local validation
+- [x] Continuous build-number policy across marketing versions
 
 ## Ordered milestones
+
+### Active framework integration (separate worktree)
+
+- Adopt tagged BibleKit/BibleKitSword services and BibleUI reader/catalog
+  components without losing current rendering, study data, links, or offline use.
+- Add a user-visible custom-feed path with explicit license and trust constraints.
+- Validate macOS, iOS, and Watch consumers before merging. Native shutdown
+  reproduction remains a separate SwordKit/host safety task.
 
 1. Reader and library polish
    - Add a dedicated Installed Modules section that clearly separates local
@@ -64,8 +83,8 @@ bed for public SwordKit releases. Complete and commit one milestone at a time.
      actions.
    - Audit and correct compact iPhone layouts, including spacing, safe areas,
      toolbar density, sheets, Dynamic Type, and landscape behavior.
-   - Add reader text-size controls for books, devotionals, and other keyed
-     modules, sharing preferences with Bible typography where appropriate.
+   - Verify shared toolbar typography updates every Bible, book, devotional, and
+     split pane live; retain regression coverage for font/style and appearance changes.
    - Present Bible book and chapter choices from their respective toolbar
      controls using native anchored popovers where the platform supports them,
      with an appropriate compact iPhone presentation.
@@ -75,10 +94,13 @@ bed for public SwordKit releases. Complete and commit one milestone at a time.
      through the SwordKit feedback loop below.
    - Refine Bible text measure, margins, paragraph and verse spacing, headings,
      and responsive layout across iPhone, iPad, and Mac.
-   - Remove always-visible bookmark and note controls from every verse. Offer
-     bookmark and note actions through the native text-selection/context menu
-     after the reader has a selected verse or highlighted passage, while keeping
-     the actions accessible to VoiceOver and keyboard users.
+   - Verify selected-text/context-menu actions in single and split readers,
+     including colored swatches, repeated words, multi-verse selections, module
+     attribution, and VoiceOver/keyboard alternatives. The actions are implemented;
+     end-to-end usability and consistent selection semantics remain acceptance work.
+   - Review the notes/highlights collection and reference deep links across modules.
+   - Review help-tag responsiveness using native behavior and accessibility;
+     do not claim a fixed hover delay without a measured implementation.
 
 2. Liquid Glass layered app icon
    - Rebuild the current book-and-sword mark as editable layers in Apple Icon
