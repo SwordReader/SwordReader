@@ -8,9 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		023939437342C131EEF2B673 /* WatchReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E44CFFBFC4CF764A0B1E8B34 /* WatchReaderView.swift */; };
+		05070286572CCF4008419B1C /* SwordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF7AC1CF36D2CDF52E0FC47 /* SwordKit */; };
+		0913B967466900040C0BF030 /* BibleKitSword in Frameworks */ = {isa = PBXBuildFile; productRef = B33BFE29270F04ECCF3C0950 /* BibleKitSword */; };
 		122AC3474CA03999334E65CF /* CompanionSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623DCE1E666AA2B7B050E275 /* CompanionSync.swift */; };
+		15B3C446E74E146E003103D8 /* BibleKitSword in Frameworks */ = {isa = PBXBuildFile; productRef = D215653FD77C1B6884EE2B4C /* BibleKitSword */; };
 		182BD29826550342634D175C /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7187879D676D30ECB4256EDC /* AppModel.swift */; };
-		1C5823E7EECCDC33AE1F2EB4 /* SwordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFE90372642D93DEC251D88 /* SwordKit */; };
+		1C5823E7EECCDC33AE1F2EB4 /* BibleKit in Frameworks */ = {isa = PBXBuildFile; productRef = 36F71E419B8F0396C23CF670 /* BibleKit */; };
 		2007609C62F55BA0F0B8DE99 /* WatchReaderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F19A26B63B5D593D21B65DF /* WatchReaderModel.swift */; };
 		264FD9BB898940E0CE221109 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE97C20016F8E4AD4AD5DCF /* LibraryView.swift */; };
 		2C3B1C3F95C51B1AB0E75A92 /* FeedbackReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE0C9255365974501D29A58 /* FeedbackReport.swift */; };
@@ -19,10 +22,12 @@
 		323FA00F082D46FB537A9B5D /* BuiltInReadingPlans.swift in Sources */ = {isa = PBXBuildFile; fileRef = E161AF8DCF5C505A9C730E0D /* BuiltInReadingPlans.swift */; };
 		3BAF876C5E73FDE361F42B85 /* SwordReaderCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDAEEF5A19F415E628AFC0F8 /* SwordReaderCommands.swift */; };
 		3DB20FC88172D40D6C6EC86A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7187879D676D30ECB4256EDC /* AppModel.swift */; };
+		43620786080C8F065711CF15 /* BibleUI in Frameworks */ = {isa = PBXBuildFile; productRef = 842A498C536178F4D2D34C81 /* BibleUI */; };
 		490B7C09AAEE89F570BE2493 /* StudyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779909E15D9A44634284F23A /* StudyStore.swift */; };
+		4CB7547465B6FF788F83FF51 /* BibleUI in Frameworks */ = {isa = PBXBuildFile; productRef = 23EF13798035A3A79A89D9BE /* BibleUI */; };
 		4D095ED2041DEF217FE3D2BC /* ReadingPlansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9521D193DBFADA37E949C355 /* ReadingPlansView.swift */; };
 		4EAC21187D8B67F6731F0EB2 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 2491B52C76E1C3649C3451F7 /* Localizable.xcstrings */; };
-		57B344E1480A39125168264F /* SwordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 18F967ADF67FF2D952214576 /* SwordKit */; };
+		57B344E1480A39125168264F /* BibleKit in Frameworks */ = {isa = PBXBuildFile; productRef = A5EB4A6FF8344CBAF394F3D6 /* BibleKit */; };
 		594C2434EDBC0AC79E54D41E /* ModuleSourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FB9904985945090F1AE920 /* ModuleSourcesView.swift */; };
 		5B88F4C1D948610C9501EC5C /* ReadingPlanReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07CE999C39AF639F6A5DAAAE /* ReadingPlanReminderScheduler.swift */; };
 		5F8082E8C38A18BA4984E15F /* ScriptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC1F04AA5EA5AB3CD6D26EF /* ScriptureService.swift */; };
@@ -30,7 +35,9 @@
 		60CF04167A8D1134B0C7158F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4103FD393D83A47DD84517C2 /* Assets.xcassets */; };
 		6A072D123975D86B1083E062 /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F56BD8D43DB695CDBF6FA1 /* ReaderView.swift */; };
 		6A351D71793BE44657B5FA4A /* SwordReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F1353239778C7BDA6745BE /* SwordReaderApp.swift */; };
+		6A975A78B285A80D765532CF /* ContentFeedBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A00EA096D8358DCBA46707 /* ContentFeedBrowser.swift */; };
 		6B37C3BDCC3C7D7D57C0D95F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6469A607DD256F71E8190B92 /* OnboardingView.swift */; };
+		6F86821BB2256545889083DC /* BibleKitSword in Frameworks */ = {isa = PBXBuildFile; productRef = 719F7AC5356829FED61BBA03 /* BibleKitSword */; };
 		6FF718927442EFFE1CE9D83C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6CFB6AFF829370098E85374A /* PrivacyInfo.xcprivacy */; };
 		7188B75C2FE76BDD8F424BDE /* SwordReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F1353239778C7BDA6745BE /* SwordReaderApp.swift */; };
 		83EE1E8A576CC2D940596B8E /* ScriptureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E1E8FB5D3F6DA959D2262C /* ScriptureModels.swift */; };
@@ -41,7 +48,7 @@
 		A2FC43E7A6889FC7B55330E0 /* PrivacyAndLicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF4650224CED85ED1D26859 /* PrivacyAndLicensesView.swift */; };
 		A43909D98CB5E98F7D7FAE86 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 33F43383FF3D4DDA7EBF9BB1 /* PrivacyInfo.xcprivacy */; };
 		A7C802DA9E68059FEDD14CAA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4103FD393D83A47DD84517C2 /* Assets.xcassets */; };
-		AAB7033D031B86D14ACC2CE4 /* SwordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF7AC1CF36D2CDF52E0FC47 /* SwordKit */; };
+		AAB7033D031B86D14ACC2CE4 /* BibleKit in Frameworks */ = {isa = PBXBuildFile; productRef = 00A4CF6CBE216E4CC0C6301A /* BibleKit */; };
 		B57C1C554734A5FFAC2B4AE3 /* ScriptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC1F04AA5EA5AB3CD6D26EF /* ScriptureService.swift */; };
 		B880DFBA56DA7D82C8C905FF /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD0644B96E4B1306F66EBF6 /* FeedbackView.swift */; };
 		B8A3B1A45FCFA16787DC569C /* SwordReaderWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FFF9F7612224C5049A38F285 /* SwordReaderWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -51,6 +58,7 @@
 		BE1539567FA191395F00429E /* SwordReaderWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBDDD380A2DBC81DCD252FE /* SwordReaderWatchApp.swift */; };
 		C3207A64496F3151B78A3775 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6CFB6AFF829370098E85374A /* PrivacyInfo.xcprivacy */; };
 		C3702C2A075B71841E477363 /* AppModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B339F32346BF8D819B510313 /* AppModelTests.swift */; };
+		CE014F00B5FCB8E8086B2D24 /* SwordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 18F967ADF67FF2D952214576 /* SwordKit */; };
 		D0476DEFEBF151A2A2324B14 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F770C383F38C009A1AD8849 /* RootView.swift */; };
 		D99C4EB13C43952B2533BC3D /* ScriptureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E1E8FB5D3F6DA959D2262C /* ScriptureModels.swift */; };
 		DCD641C8F1931CFCFA7E8AEC /* RemoteModuleBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD4F6E041939D1BDFAEA801 /* RemoteModuleBrowser.swift */; };
@@ -58,9 +66,11 @@
 		E6D0FEADDEE34DCF715849E2 /* PrivacyAndLicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF4650224CED85ED1D26859 /* PrivacyAndLicensesView.swift */; };
 		E7E464A945855B2B7D586AEC /* StudyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779909E15D9A44634284F23A /* StudyStore.swift */; };
 		ED949E0BB7CEB907075FBE1C /* ReadingPlansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9521D193DBFADA37E949C355 /* ReadingPlansView.swift */; };
+		EE4795BADE578B22DF744A1E /* ContentFeedBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A00EA096D8358DCBA46707 /* ContentFeedBrowser.swift */; };
 		EEDECA17C41A459D87109740 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1741643992A27FFAFA934371 /* Assets.xcassets */; };
 		EF0A36C005481EB200119EE3 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE97C20016F8E4AD4AD5DCF /* LibraryView.swift */; };
 		EFEE74F426EE1C5291DFC796 /* ReaderContinuityActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED025CDA228F5BF1BFC0211 /* ReaderContinuityActivity.swift */; };
+		F39B558CE3BCBD198F4062D5 /* SwordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFE90372642D93DEC251D88 /* SwordKit */; };
 		F53FF6732884320783B04C88 /* ReadingPlanReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07CE999C39AF639F6A5DAAAE /* ReadingPlanReminderScheduler.swift */; };
 		F618F5CB75642F8BF1C91214 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 5CCAF77317D7CE2995A1B755 /* Localizable.xcstrings */; };
 		F7378B214BADAC5C6DC40B7D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F770C383F38C009A1AD8849 /* RootView.swift */; };
@@ -125,6 +135,7 @@
 		6CFB6AFF829370098E85374A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7187879D676D30ECB4256EDC /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		779909E15D9A44634284F23A /* StudyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyStore.swift; sourceTree = "<group>"; };
+		77A00EA096D8358DCBA46707 /* ContentFeedBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentFeedBrowser.swift; sourceTree = "<group>"; };
 		7FD4F6E041939D1BDFAEA801 /* RemoteModuleBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteModuleBrowser.swift; sourceTree = "<group>"; };
 		88FB9904985945090F1AE920 /* ModuleSourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleSourcesView.swift; sourceTree = "<group>"; };
 		9521D193DBFADA37E949C355 /* ReadingPlansView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingPlansView.swift; sourceTree = "<group>"; };
@@ -145,7 +156,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				57B344E1480A39125168264F /* SwordKit in Frameworks */,
+				57B344E1480A39125168264F /* BibleKit in Frameworks */,
+				15B3C446E74E146E003103D8 /* BibleKitSword in Frameworks */,
+				CE014F00B5FCB8E8086B2D24 /* SwordKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -153,7 +166,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C5823E7EECCDC33AE1F2EB4 /* SwordKit in Frameworks */,
+				1C5823E7EECCDC33AE1F2EB4 /* BibleKit in Frameworks */,
+				6F86821BB2256545889083DC /* BibleKitSword in Frameworks */,
+				43620786080C8F065711CF15 /* BibleUI in Frameworks */,
+				F39B558CE3BCBD198F4062D5 /* SwordKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,7 +177,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AAB7033D031B86D14ACC2CE4 /* SwordKit in Frameworks */,
+				AAB7033D031B86D14ACC2CE4 /* BibleKit in Frameworks */,
+				0913B967466900040C0BF030 /* BibleKitSword in Frameworks */,
+				4CB7547465B6FF788F83FF51 /* BibleUI in Frameworks */,
+				05070286572CCF4008419B1C /* SwordKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +264,7 @@
 		8AF4F5A6F4B0EB2D336451CE /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				77A00EA096D8358DCBA46707 /* ContentFeedBrowser.swift */,
 				3AE97C20016F8E4AD4AD5DCF /* LibraryView.swift */,
 				88FB9904985945090F1AE920 /* ModuleSourcesView.swift */,
 				5FF4650224CED85ED1D26859 /* PrivacyAndLicensesView.swift */,
@@ -373,6 +393,9 @@
 			);
 			name = SwordReader;
 			packageProductDependencies = (
+				00A4CF6CBE216E4CC0C6301A /* BibleKit */,
+				B33BFE29270F04ECCF3C0950 /* BibleKitSword */,
+				23EF13798035A3A79A89D9BE /* BibleUI */,
 				1DF7AC1CF36D2CDF52E0FC47 /* SwordKit */,
 			);
 			productName = SwordReader;
@@ -393,6 +416,8 @@
 			);
 			name = SwordReaderWatch;
 			packageProductDependencies = (
+				A5EB4A6FF8344CBAF394F3D6 /* BibleKit */,
+				D215653FD77C1B6884EE2B4C /* BibleKitSword */,
 				18F967ADF67FF2D952214576 /* SwordKit */,
 			);
 			productName = SwordReaderWatch;
@@ -431,6 +456,9 @@
 			);
 			name = SwordReaderMac;
 			packageProductDependencies = (
+				36F71E419B8F0396C23CF670 /* BibleKit */,
+				719F7AC5356829FED61BBA03 /* BibleKitSword */,
+				842A498C536178F4D2D34C81 /* BibleUI */,
 				1BFE90372642D93DEC251D88 /* SwordKit */,
 			);
 			productName = SwordReaderMac;
@@ -467,6 +495,8 @@
 			mainGroup = B7DC0FAF66DF9403018E8327;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */,
+				A569469CB3EEB3D966BE0E16 /* XCRemoteSwiftPackageReference "BibleUI" */,
 				DD71EAF3B74C4E6E94F09088 /* XCRemoteSwiftPackageReference "SwordKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -531,6 +561,7 @@
 				3DB20FC88172D40D6C6EC86A /* AppModel.swift in Sources */,
 				2E511E2351B5D06AE5267162 /* BuiltInReadingPlans.swift in Sources */,
 				2DE65A5A7FF91282FA01AC9D /* CompanionSync.swift in Sources */,
+				EE4795BADE578B22DF744A1E /* ContentFeedBrowser.swift in Sources */,
 				2C3B1C3F95C51B1AB0E75A92 /* FeedbackReport.swift in Sources */,
 				FD7F5E2AC675FA1F8CD2EEE3 /* FeedbackView.swift in Sources */,
 				264FD9BB898940E0CE221109 /* LibraryView.swift in Sources */,
@@ -570,6 +601,7 @@
 				182BD29826550342634D175C /* AppModel.swift in Sources */,
 				323FA00F082D46FB537A9B5D /* BuiltInReadingPlans.swift in Sources */,
 				122AC3474CA03999334E65CF /* CompanionSync.swift in Sources */,
+				6A975A78B285A80D765532CF /* ContentFeedBrowser.swift in Sources */,
 				BC244FC7AD65C73C2993ABFB /* FeedbackReport.swift in Sources */,
 				B880DFBA56DA7D82C8C905FF /* FeedbackView.swift in Sources */,
 				EF0A36C005481EB200119EE3 /* LibraryView.swift in Sources */,
@@ -938,6 +970,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwordReader/BibleKit.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.3.2;
+			};
+		};
+		A569469CB3EEB3D966BE0E16 /* XCRemoteSwiftPackageReference "BibleUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwordReader/BibleUI.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.2.2;
+			};
+		};
 		DD71EAF3B74C4E6E94F09088 /* XCRemoteSwiftPackageReference "SwordKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/orbeavers14/SwordKit.git";
@@ -949,6 +997,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		00A4CF6CBE216E4CC0C6301A /* BibleKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */;
+			productName = BibleKit;
+		};
 		18F967ADF67FF2D952214576 /* SwordKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DD71EAF3B74C4E6E94F09088 /* XCRemoteSwiftPackageReference "SwordKit" */;
@@ -963,6 +1016,41 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DD71EAF3B74C4E6E94F09088 /* XCRemoteSwiftPackageReference "SwordKit" */;
 			productName = SwordKit;
+		};
+		23EF13798035A3A79A89D9BE /* BibleUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A569469CB3EEB3D966BE0E16 /* XCRemoteSwiftPackageReference "BibleUI" */;
+			productName = BibleUI;
+		};
+		36F71E419B8F0396C23CF670 /* BibleKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */;
+			productName = BibleKit;
+		};
+		719F7AC5356829FED61BBA03 /* BibleKitSword */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */;
+			productName = BibleKitSword;
+		};
+		842A498C536178F4D2D34C81 /* BibleUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A569469CB3EEB3D966BE0E16 /* XCRemoteSwiftPackageReference "BibleUI" */;
+			productName = BibleUI;
+		};
+		A5EB4A6FF8344CBAF394F3D6 /* BibleKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */;
+			productName = BibleKit;
+		};
+		B33BFE29270F04ECCF3C0950 /* BibleKitSword */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */;
+			productName = BibleKitSword;
+		};
+		D215653FD77C1B6884EE2B4C /* BibleKitSword */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B0CBC1968B6014E1F73B3B0 /* XCRemoteSwiftPackageReference "BibleKit" */;
+			productName = BibleKitSword;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

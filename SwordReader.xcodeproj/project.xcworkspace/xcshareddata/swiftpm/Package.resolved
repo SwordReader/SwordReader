@@ -1,6 +1,24 @@
 {
-  "originHash" : "9d41e46031ecf91ebaa0cf75a301d048a25839a5673ab0ec46618fd9f137e040",
+  "originHash" : "0d13110da37dbcc4da1873e869e4f4a3d09a4a5e766815a632190cdb4fb008b2",
   "pins" : [
+    {
+      "identity" : "biblekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwordReader/BibleKit.git",
+      "state" : {
+        "revision" : "8b2fc992bb9507e7a780c04ddd8c12ea81a1ae35",
+        "version" : "0.3.2"
+      }
+    },
+    {
+      "identity" : "bibleui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwordReader/BibleUI.git",
+      "state" : {
+        "revision" : "286706bc7aebd9517051bb58fbac8eb581210f3b",
+        "version" : "0.2.2"
+      }
+    },
     {
       "identity" : "swordkit",
       "kind" : "remoteSourceControl",

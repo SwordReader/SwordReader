@@ -1,6 +1,8 @@
 import Foundation
 import Observation
 import SwordKit
+import BibleKit
+import BibleKitSword
 import WatchConnectivity
 
 struct WatchBible: Identifiable, Hashable, Sendable { let id: String; let title: String }
@@ -23,21 +25,21 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
     private(set) var installingModuleID: String?
     var presentedError: String?
 
-    private let library: SwordLibrary
-    private let installer: SwordModuleInstaller
+    private let provider: SwordContentProvider
     private let repository: SwordModuleRepository
     private static let moduleKey = "watch.module"
     private static let bookKey = "watch.book"
     private static let chapterKey = "watch.chapter"
     private var chapterTask: Task<Void, Never>?
     private var chapterGeneration = UUID()
+    private var activationGeneration = UUID()
 
     override init() {
         do {
             let location = try SwordModuleLocation.applicationSupport()
             let repository = try Self.crossWireRepository()
-            library = try SwordLibrary(location: location)
-            installer = SwordModuleInstaller(configuration: .init(location: location, repositories: [repository]))
+            provider = SwordContentProvider(library: try SwordLibrary(location: location),
+                installer: SwordModuleInstaller(configuration: .init(location: location, repositories: [repository])))
             self.repository = repository
         } catch { fatalError("Unable to prepare SwordReader storage: \(error)") }
         super.init()
@@ -60,8 +62,11 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
         return selectedChapter < book.chapterCount || index < books.index(before: books.endIndex)
     }
 
-    func start() { refreshLibrary() }
-    func selectModule(_ id: String) { guard id != selectedModuleID else { return }; activateModule(id, restoring: false) }
+    func start() { Task { await refreshLibrary() } }
+    func selectModule(_ id: String) {
+        guard id != selectedModuleID else { return }
+        Task { await activateModule(id, restoring: false) }
+    }
     func selectBook(_ id: String) {
         guard books.contains(where: { $0.id == id }) else { return }
         selectedBookID = id; selectedChapter = 1; persistSelection(); loadChapter()
@@ -84,9 +89,9 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
     func refreshRemoteCatalog() async {
         isLoading = true; defer { isLoading = false }
         do {
-            let catalog = try await installer.refreshCatalog(for: repository, acknowledgingRemoteAccessRisks: true)
-            remoteModules = catalog.modules.filter { $0.category == .bible }.map {
-                WatchCatalogBible(id: $0.name, title: $0.title.isEmpty ? $0.name : $0.title, language: $0.language)
+            let catalog = try await provider.remoteCatalog(from: repository, acknowledgingRemoteAccessRisks: true)
+            remoteModules = catalog.filter { $0.kind == .bible }.map {
+                WatchCatalogBible(id: $0.contentID.rawValue, title: $0.title.isEmpty ? $0.contentID.rawValue : $0.title, language: $0.languageCode)
             }.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         } catch { presentedError = error.localizedDescription }
     }
@@ -95,8 +100,9 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
         isInstalling = true; installingModuleID = module.id
         defer { isInstalling = false; installingModuleID = nil }
         do {
-            try await installer.install(moduleNamed: module.id, from: repository, acknowledgingRemoteAccessRisks: true)
-            refreshLibrary(preferredModuleID: module.id)
+            try await provider.install(contentID: BibleContentID(rawValue: module.id), from: repository,
+                                       acknowledgingRemoteAccessRisks: true, progress: { _ in })
+            await refreshLibrary(preferredModuleID: module.id)
         } catch { presentedError = error.localizedDescription }
     }
 
@@ -106,31 +112,47 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
         do {
             let received = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).zip")
             try FileManager.default.copyItem(at: file.fileURL, to: received)
-            Task { @MainActor in self.installReceived(moduleID: moduleID, archive: received) }
+            Task { @MainActor in await self.installReceived(moduleID: moduleID, archive: received) }
         } catch {
             let message = error.localizedDescription
             Task { @MainActor in self.presentedError = message }
         }
     }
 
-    private func installReceived(moduleID: String, archive: URL) {
+    private func installReceived(moduleID: String, archive: URL) async {
         defer { try? FileManager.default.removeItem(at: archive) }
-        do { try installer.install(moduleNamed: moduleID, fromArchive: archive); refreshLibrary(preferredModuleID: moduleID) }
+        do {
+            try await provider.install(contentID: BibleContentID(rawValue: moduleID), fromArchive: archive)
+            await refreshLibrary(preferredModuleID: moduleID)
+        }
         catch { presentedError = error.localizedDescription }
     }
-    private func refreshLibrary(preferredModuleID: String? = nil) {
-        library.refresh()
-        modules = library.modules(category: .bible).map { WatchBible(id: $0.name, title: $0.title.isEmpty ? $0.name : $0.title) }
-            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-        guard !modules.isEmpty else { selectedModuleID = nil; books = []; verses = []; return }
-        let requested = preferredModuleID ?? UserDefaults.standard.string(forKey: Self.moduleKey)
-        let id = modules.first(where: { $0.id == requested })?.id ?? modules[0].id
-        activateModule(id, restoring: preferredModuleID == nil)
-    }
-    private func activateModule(_ id: String, restoring: Bool) {
-        guard let module = library.module(named: id) else { return }
+    private func refreshLibrary(preferredModuleID: String? = nil) async {
         do {
-            books = try module.books().map { WatchBook(id: $0.osisName, name: $0.name, chapterCount: $0.chapterCount) }
+            try await provider.refresh()
+            modules = try await provider.catalog().filter { $0.kind == .bible }.map {
+                WatchBible(id: $0.contentID.rawValue, title: $0.title.isEmpty ? $0.contentID.rawValue : $0.title)
+            }
+                .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            guard !modules.isEmpty else {
+                activationGeneration = UUID(); chapterGeneration = UUID(); chapterTask?.cancel()
+                selectedModuleID = nil; books = []; verses = []; isLoadingChapter = false; return
+            }
+            let requested = preferredModuleID ?? UserDefaults.standard.string(forKey: Self.moduleKey)
+            let id = modules.first(where: { $0.id == requested })?.id ?? modules[0].id
+            await activateModule(id, restoring: preferredModuleID == nil)
+        } catch { presentedError = error.localizedDescription }
+    }
+    private func activateModule(_ id: String, restoring: Bool) async {
+        let generation = UUID()
+        activationGeneration = generation
+        chapterGeneration = UUID(); chapterTask?.cancel()
+        do {
+            let loadedBooks = try await provider.books(contentID: BibleContentID(rawValue: id)).map {
+                WatchBook(id: $0.id, name: $0.name, chapterCount: $0.chapterCount)
+            }
+            guard activationGeneration == generation else { return }
+            books = loadedBooks
             selectedModuleID = id
             let saved = restoring ? UserDefaults.standard.string(forKey: Self.bookKey) : nil
             let book = books.first(where: { $0.id == saved }) ?? books.first(where: { $0.id == "John" }) ?? books.first
@@ -138,12 +160,15 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
             let savedChapter = restoring ? UserDefaults.standard.integer(forKey: Self.chapterKey) : 0
             selectedChapter = min(max(savedChapter, 1), book?.chapterCount ?? 1)
             persistSelection(); loadChapter()
-        } catch { presentedError = error.localizedDescription }
+        } catch {
+            guard activationGeneration == generation else { return }
+            isLoadingChapter = false
+            presentedError = error.localizedDescription
+        }
     }
     private func loadChapter() {
         chapterTask?.cancel()
         guard let moduleID = selectedModuleID,
-              let module = library.module(named: moduleID),
               !reference.isEmpty
         else { return }
 
@@ -153,19 +178,15 @@ final class WatchReaderModel: NSObject, WCSessionDelegate {
         isLoadingChapter = true
         chapterTask = Task {
             do {
-                let loaded = try await Task.detached(priority: .userInitiated) {
-                    try Task.checkCancellation()
-                    let chapter = try module.chapter(requestedReference)
-                    try Task.checkCancellation()
-                    return chapter.verses.map {
-                        WatchVerse(
-                            id: $0.reference.value,
-                            number: $0.reference.value.split(separator: ":")
-                                .last.map(String.init) ?? "",
-                            text: $0.text
-                        )
-                    }
-                }.value
+                let chapter = try await provider.chapter(contentID: BibleContentID(rawValue: moduleID), reference: requestedReference)
+                let loaded = chapter.verses.map {
+                    WatchVerse(
+                        id: $0.reference,
+                        number: $0.reference.split(separator: ":")
+                            .last.map(String.init) ?? "",
+                        text: $0.text
+                    )
+                }
                 guard !Task.isCancelled,
                       chapterGeneration == generation
                 else { return }

@@ -1,4 +1,5 @@
 import SwiftUI
+import BibleUI
 #if os(macOS)
 import AppKit
 #else
@@ -9,8 +10,6 @@ struct ReaderView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
-    @State private var isChoosingBook = false
-    @State private var isChoosingChapter = false
     @State private var isShowingComparison = false
     @State private var isShowingModuleBrowser = false
     @State private var isConfirmingModuleDownload = false
@@ -51,29 +50,6 @@ struct ReaderView: View {
         .navigationTitle(readerNavigationTitle)
         .toolbarTitleDisplayMode(.inline)
         .toolbar { readerToolbar }
-        #if os(macOS)
-        .sheet(isPresented: $isChoosingBook) {
-            BookNavigationView()
-                .environment(model)
-                .frame(minWidth: 420, minHeight: 560)
-        }
-        .sheet(isPresented: $isChoosingChapter) {
-            chapterNavigation
-                .frame(minWidth: 420, minHeight: 560)
-        }
-        #else
-        .popover(isPresented: $isChoosingBook) {
-            BookNavigationView()
-                .environment(model)
-                .frame(minWidth: 340, idealWidth: 420, minHeight: 480)
-                .presentationCompactAdaptation(.sheet)
-        }
-        .popover(isPresented: $isChoosingChapter) {
-            chapterNavigation
-                .frame(minWidth: 340, idealWidth: 420, minHeight: 480)
-                .presentationCompactAdaptation(.sheet)
-        }
-        #endif
         .sheet(isPresented: $isShowingComparison, onDismiss: { model.endComparison() }) {
             TranslationComparisonView().environment(model)
         }
@@ -408,31 +384,14 @@ struct ReaderView: View {
     }
 
     private var referenceChooser: some View {
-        HStack(spacing: 2) {
-            Button {
-                isChoosingBook = true
-            } label: {
-                Text(model.selectedBook?.name ?? "Choose Book")
-                    .fontWeight(.semibold)
-            }
-            .accessibilityHint("Shows Bible books")
-
-            Button {
-                isChoosingChapter = true
-            } label: {
-                HStack(spacing: 4) {
-                    Text(model.selectedBook == nil ? "Chapter" : "\(model.selectedChapter)")
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .disabled(model.selectedBook == nil)
-            .accessibilityLabel("Choose Chapter")
+        BibleReferenceControl(bookTitle: model.selectedBook?.name ?? "Choose Book",
+                              chapter: model.selectedBook == nil ? nil : model.selectedChapter) {
+            BookNavigationView().environment(model)
+                .frame(minWidth: 340, idealWidth: 420, minHeight: 480)
+        } chapters: {
+            chapterNavigation
+                .frame(minWidth: 340, idealWidth: 420, minHeight: 480)
         }
-        .buttonStyle(.plain)
     }
 
     private var nextChapterButton: some View {
