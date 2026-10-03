@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwordReader/BibleUI.git",
       "state" : {
-        "revision" : "286706bc7aebd9517051bb58fbac8eb581210f3b",
-        "version" : "0.2.2"
+        "revision" : "bb1c5a4fa89e13630b97059f5f220a56c26db851",
+        "version" : "0.2.3"
       }
     },
     {

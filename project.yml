@@ -11,7 +11,7 @@ packages:
     exactVersion: 0.3.2
   BibleUI:
     url: https://github.com/SwordReader/BibleUI.git
-    exactVersion: 0.2.2
+    exactVersion: 0.2.3
   SwordKit:
     url: https://github.com/orbeavers14/SwordKit.git
     exactVersion: 0.6.1

@@ -983,7 +983,7 @@
 			repositoryURL = "https://github.com/SwordReader/BibleUI.git";
 			requirement = {
 				kind = exactVersion;
-				version = 0.2.2;
+				version = 0.2.3;
 			};
 		};
 		DD71EAF3B74C4E6E94F09088 /* XCRemoteSwiftPackageReference "SwordKit" */ = {

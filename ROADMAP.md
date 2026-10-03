@@ -69,7 +69,7 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
 
 ## Ordered milestones
 
-### Active framework integration (separate worktree)
+### Framework integration baseline
 
 - [x] Adopt tagged BibleKit/BibleKitSword for app and Watch engine operations;
   use BibleUI for regular-book text, reference popovers, and custom-feed catalogs.
@@ -79,8 +79,11 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
   components without losing current rendering, study data, links, or offline use.
 - [x] Add a user-visible custom-feed path with explicit license and trust
   constraints, bounded HTTPS transport, and session-only content.
-- Validate macOS, iOS, and Watch consumers before merging. Native shutdown
-  reproduction remains a separate SwordKit/host safety task.
+- [x] Baseline integration merged in PR #16; macOS tests and iOS/watchOS builds
+  passed both locally and on GitHub.
+- [ ] Complete device/accessibility acceptance and continued study-renderer
+  extraction. Native shutdown reproduction remains a separate SwordKit/host
+  safety task.
 
 1. Reader and library polish
    - Add a dedicated Installed Modules section that clearly separates local
