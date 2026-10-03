@@ -611,6 +611,29 @@ struct AppModelTests {
         #expect(model.chapter?.reference == "Romans 8")
     }
 
+    @Test func cancelledChapterCannotReplaceANewerLocation() async throws {
+        let service = FakeScriptureService()
+        let model = AppModel(service: service)
+        await model.start()
+        await service.holdChapter("John 1")
+        model.select(bookID: "John", chapter: 1)
+        for _ in 0..<1_000 {
+            if await service.hasHeldChapter() { break }
+            await Task.yield()
+        }
+        #expect(await service.hasHeldChapter())
+        model.select(bookID: "John", chapter: 2)
+        for _ in 0..<1_000 {
+            if model.chapter?.reference == "John 2" { break }
+            await Task.yield()
+        }
+        #expect(model.chapter?.reference == "John 2")
+        await service.releaseHeldChapter()
+        for _ in 0..<100 { await Task.yield() }
+        #expect(model.chapter?.reference == "John 2")
+        #expect(!model.isLoading)
+    }
+
     @Test func emptySearchClearsResults() async throws {
         let service = FakeScriptureService()
         let model = AppModel(service: service)
@@ -1084,6 +1107,16 @@ private final class FakeReadingPlanReminderScheduler: ReadingPlanReminderSchedul
 }
 
 private actor FakeScriptureService: ScriptureServing {
+    private var heldReference: String?
+    private var heldChapter: CheckedContinuation<Void, Never>?
+
+    func holdChapter(_ reference: String) { heldReference = reference }
+    func hasHeldChapter() -> Bool { heldChapter != nil }
+    func releaseHeldChapter() {
+        heldReference = nil
+        heldChapter?.resume()
+        heldChapter = nil
+    }
     private var availableModules: [BibleModule]
     private var availableKeyedModules: [KeyedModule]
     private var availableKeyedEntries: [String: [KeyedModuleEntry]]
@@ -1130,8 +1163,11 @@ private actor FakeScriptureService: ScriptureServing {
         return entry
     }
 
-    func chapter(_ reference: String, moduleID: String) -> BibleChapter {
-        BibleChapter(reference: reference, moduleID: moduleID, verses: [])
+    func chapter(_ reference: String, moduleID: String) async -> BibleChapter {
+        if reference == heldReference {
+            await withCheckedContinuation { heldChapter = $0 }
+        }
+        return BibleChapter(reference: reference, moduleID: moduleID, verses: [])
     }
 
     func parallelChapter(

@@ -67,6 +67,7 @@ final class AppModel {
     private let companionSync: (any CompanionSyncing)?
     private let reminderScheduler: (any ReadingPlanReminderScheduling)?
     private var chapterTask: Task<Void, Never>?
+    private var chapterGeneration = UUID()
     private var searchTask: Task<Void, Never>?
     private var searchGeneration = UUID()
     private var remoteInstallTask: Task<Void, Error>?
@@ -1081,7 +1082,7 @@ final class AppModel {
         let scope = searchScope
         let generation = UUID()
         searchGeneration = generation
-        searchTask = Task {
+        searchTask = Task { [self] in
             do {
                 let results = try await service.search(
                     normalized,
@@ -1175,7 +1176,7 @@ final class AppModel {
         installingModuleID = module.id
         installProgress = nil
 
-        let task = Task {
+        let task = Task { [self] in
             guard let source = moduleSources.first(where: { $0.id == module.sourceID }) else {
                 throw ModuleSourceError.invalidEndpoint
             }
@@ -1298,23 +1299,33 @@ final class AppModel {
 
     private func loadChapter() {
         chapterTask?.cancel()
+        let generation = UUID()
+        chapterGeneration = generation
         synchronizeSelectedReaderTab()
         guard let selectedModuleID, !reference.isEmpty else {
             chapter = nil
+            isLoading = false
             return
         }
+        let requestedReference = reference
+        let service = service
         isLoading = true
-        chapterTask = Task {
+        chapterTask = Task { [weak self] in
             do {
-                let loaded = try await service.chapter(reference, moduleID: selectedModuleID)
-                chapter = loaded
-                companionSync?.send(chapter: loaded)
+                let loaded = try await service.chapter(requestedReference, moduleID: selectedModuleID)
+                try Task.checkCancellation()
+                guard let self, self.chapterGeneration == generation else { return }
+                self.chapter = loaded
+                self.companionSync?.send(chapter: loaded)
             } catch is CancellationError {
                 return
             } catch {
-                presentedError = PresentedError(error)
+                guard !Task.isCancelled,
+                      let self, self.chapterGeneration == generation else { return }
+                self.presentedError = PresentedError(error)
             }
-            isLoading = false
+            guard let self, self.chapterGeneration == generation else { return }
+            self.isLoading = false
         }
     }
 
