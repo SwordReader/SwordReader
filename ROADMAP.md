@@ -3,8 +3,9 @@
 SwordReader is developed as both a launchable Bible app and an integration test
 bed for public SwordKit releases. Complete and commit one milestone at a time.
 
-Reviewed October 3, 2026 against `main` through `4b890df`. Framework integration
-in the other chat/worktree is in progress and is not yet part of this baseline.
+Reviewed October 3, 2026 against `main` through `c01115f`. Framework integration
+is merged in PR #16. Current pins are SwordKit 0.6.1, BibleKit 0.3.2, and
+BibleUI 0.2.3; physical-device acceptance remains pending.
 
 ## Completed
 
@@ -75,8 +76,8 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
   use BibleUI for regular-book text, reference popovers, and custom-feed catalogs.
   Local macOS tests and generic iOS/watchOS builds pass. Device acceptance and
   extracting the advanced Scripture study renderer remain pending.
-- Continue BibleUI reader/catalog
-  components without losing current rendering, study data, links, or offline use.
+- [ ] Continue extracting BibleUI reader/catalog components without losing
+  current rendering, study data, links, or offline use.
 - [x] Add a user-visible custom-feed path with explicit license and trust
   constraints, bounded HTTPS transport, and session-only content.
 - [x] Baseline integration merged in PR #16; macOS tests and iOS/watchOS builds
@@ -93,9 +94,8 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
      toolbar density, sheets, Dynamic Type, and landscape behavior.
    - Verify shared toolbar typography updates every Bible, book, devotional, and
      split pane live; retain regression coverage for font/style and appearance changes.
-   - Present Bible book and chapter choices from their respective toolbar
-     controls using native anchored popovers where the platform supports them,
-     with an appropriate compact iPhone presentation.
+   - Verify the adopted BibleUI book/chapter controls' native anchored popovers
+     and compact iPhone presentation in the running app.
    - Continue expanding readable book and devotional compatibility. Categorize
      modules currently reported as incompatible, distinguish unsupported content
      from metadata/parser defects, and route reproducible framework problems

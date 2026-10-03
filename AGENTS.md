@@ -23,7 +23,9 @@ For every milestone:
 
 ## SwordKit boundary
 
-BibleKit/BibleKitSword and BibleUI integration is being developed separately.
+The app and Watch consume BibleKit/BibleKitSword, and the app adopts BibleUI
+components. The baseline integration is merged; advanced study-renderer
+extraction and device acceptance remain separate milestones.
 Use tagged public dependencies and preserve rich content, module identifiers,
 study-data destinations, and offline behavior during adoption. Keep navigation,
 scenes, persistence, Watch transfer, Handoff, and reminders in the application.
