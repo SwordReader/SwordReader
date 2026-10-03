@@ -8,10 +8,10 @@ options:
 packages:
   BibleKit:
     url: https://github.com/SwordReader/BibleKit.git
-    exactVersion: 0.3.0
+    exactVersion: 0.3.2
   BibleUI:
     url: https://github.com/SwordReader/BibleUI.git
-    exactVersion: 0.2.0
+    exactVersion: 0.2.2
   SwordKit:
     url: https://github.com/orbeavers14/SwordKit.git
     exactVersion: 0.6.1
@@ -97,6 +97,10 @@ targets:
     sources:
       - path: SwordReaderWatch
     dependencies:
+      - package: BibleKit
+        product: BibleKit
+      - package: BibleKit
+        product: BibleKitSword
       - package: SwordKit
         product: SwordKit
     settings:

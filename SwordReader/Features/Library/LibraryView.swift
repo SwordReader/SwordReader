@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
     @State private var isImporting = false
+    @State private var isShowingContentFeeds = false
     @State private var modulePendingRemoval: BibleModule?
     @State private var keyedModulePendingRemoval: KeyedModule?
     @State private var isShowingRemoteAccessWarning = false
@@ -117,6 +118,9 @@ struct LibraryView: View {
         }
         .navigationTitle("Library")
         .toolbar {
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Open Content Feed…", systemImage: "network") { isShowingContentFeeds = true }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Get Modules", systemImage: "arrow.down.circle") {
                     isShowingRemoteAccessWarning = true
@@ -157,6 +161,9 @@ struct LibraryView: View {
         }
         .sheet(isPresented: $isShowingModuleBrowser) {
             RemoteModuleBrowser().environment(model)
+        }
+        .sheet(isPresented: $isShowingContentFeeds) {
+            ContentFeedBrowser().environment(model)
         }
         .sheet(isPresented: $isShowingPrivacyAndLicenses) {
             PrivacyAndLicensesView().environment(model)

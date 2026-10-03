@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwordReader/BibleKit.git",
       "state" : {
-        "revision" : "1c35680de5a7affb599a8cc0abce338c76b2d30c",
-        "version" : "0.3.0"
+        "revision" : "8b2fc992bb9507e7a780c04ddd8c12ea81a1ae35",
+        "version" : "0.3.2"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwordReader/BibleUI.git",
       "state" : {
-        "revision" : "d57f8400e460660ab019f0c2996adb6c19cce000",
-        "version" : "0.2.0"
+        "revision" : "286706bc7aebd9517051bb58fbac8eb581210f3b",
+        "version" : "0.2.2"
       }
     },
     {
