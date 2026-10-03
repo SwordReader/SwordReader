@@ -110,7 +110,37 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
    - Review help-tag responsiveness using native behavior and accessibility;
      do not claim a fixed hover delay without a measured implementation.
 
-2. Liquid Glass layered app icon
+2. Native Read Aloud
+   - [ ] Add an optional audible reader for Bible chapters, books, and devotionals
+     using Apple's speech synthesis; start with macOS and iPhone/iPad.
+   - [ ] Offer play/pause/resume/stop, available system voice and language
+     selection, speaking rate, and previous/next chapter or entry controls.
+   - [ ] Track and optionally highlight the spoken passage, support continuous
+     reading, and restore the user's listening position without autoplay.
+   - [ ] Keep playback/session ownership in SwordReader, source content and
+     permissions through BibleKit, and reusable controls in BibleUI.
+   - [ ] Handle audio interruptions, headphones, background/locked-screen
+     playback where supported, accessibility coexistence, and local privacy.
+     Validate behavior on devices rather than assuming parity across platforms.
+   - [ ] Evaluate standalone Watch narration and audio routing after the larger
+     platform reader is validated; tvOS/visionOS app presentation stays deferred.
+   - [ ] Respect provider/module terms; saved or exported audio is a separate,
+     explicitly permission-gated feature, not part of the initial reader.
+
+3. Siri and Shortcuts
+   - [ ] Add app-owned App Intents/App Shortcuts for reading the current chapter
+     or a chosen passage, resuming listening, and supported playback controls.
+   - [ ] Resolve references and translations through the shared application
+     model; when a module is missing, offer the existing translation or an
+     explicit download instead of silently installing or speaking different text.
+   - [ ] Test discoverability, supported Siri phrases, foreground/background
+     execution, locked-device restrictions, cancellation, and clear error results
+     on each supported platform. Siri triggers the reader; system speech voices
+     provide narration without promising Siri's exact voice.
+   - [ ] Keep Siri metadata and invocation behavior out of the content frameworks;
+     native in-app playback remains usable without enabling Siri.
+
+4. Liquid Glass layered app icon
    - Rebuild the current book-and-sword mark as editable layers in Apple Icon
      Composer rather than relying only on flattened PNG artwork.
    - Import the existing default, dark, and monochrome artwork and tune Default,
@@ -124,7 +154,7 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
      minimum supported OS and Xcode release make the Icon Composer asset safe to
      adopt exclusively.
 
-3. Signed automatic Mac updates
+5. Signed automatic Mac updates
    - Add Sparkle 2 to the macOS target after a repeatable release workflow and
      Apple Developer ID signing are available.
    - Publish EdDSA-signed update archives and an appcast alongside GitHub
@@ -132,7 +162,7 @@ in the other chat/worktree is in progress and is not yet part of this baseline.
    - Add user-controlled automatic update checks while retaining the native
      Check for Updates command.
 
-4. Launch coordination
+6. Launch coordination
    - Complete Apple Developer signing, physical-device testing, App Store
      records, screenshots, support and privacy-policy URLs, and beta feedback.
 
